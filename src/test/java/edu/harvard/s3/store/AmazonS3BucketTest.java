@@ -108,4 +108,18 @@ public class AmazonS3BucketTest extends AbstractStoreTest {
         store.close();
     }
 
+    @Test
+    public void testRenameSkipLargeObject(final S3Client s3) {
+        AmazonS3Bucket store = new AmazonS3Bucket(getAwsBucketName(), getAwsMaxKeys(), endpointOverride);
+
+        S3Object object = S3Object.builder()
+            .size(5368709121L)
+            .key("foo")
+            .build();
+
+        int result = store.rename(object, "bar");
+
+        assertEquals(1, result);
+    }
+
 }
