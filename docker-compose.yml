@@ -1,0 +1,9 @@
+version: '3.3'
+
+services:
+  service:
+    build:
+      context: .
+    env_file: .env
+    volumes:
+      - ./external:/external
