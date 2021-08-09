@@ -26,8 +26,8 @@ import org.junit.jupiter.api.Test;
 public class TimeUtilsTest {
 
     @Test
-    public void testEllapsed() {
-        assertTrue(TimeUtils.ellapsed(System.nanoTime()) >= 0.0);
+    public void testElapsed() {
+        assertTrue(TimeUtils.elapsed(System.nanoTime()) >= 0.0);
     }
 
 }

@@ -26,11 +26,11 @@ public final class TimeUtils {
     private TimeUtils() { }
 
     /**
-     * Compute time ellapsed from start time in milliseconds.
+     * Compute time elapsed from start time in milliseconds.
      *
-     * @return time ellapsed
+     * @return time elapsed
      */
-    public static double ellapsed(long startTime) {
+    public static double elapsed(long startTime) {
         return (nanoTime() - startTime) / 1000000.0;
     }
 

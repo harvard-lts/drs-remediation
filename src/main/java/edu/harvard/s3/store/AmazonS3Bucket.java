@@ -17,7 +17,7 @@
 package edu.harvard.s3.store;
 
 import static edu.harvard.s3.utility.RuntimeUtils.totalMemory;
-import static edu.harvard.s3.utility.TimeUtils.ellapsed;
+import static edu.harvard.s3.utility.TimeUtils.elapsed;
 import static org.apache.commons.lang3.StringUtils.removeEnd;
 import static org.apache.commons.lang3.StringUtils.removeStart;
 
@@ -100,7 +100,7 @@ public class AmazonS3Bucket implements ObjectStore {
             .sum();
 
         log.info("{} objects in bucket {}", count, bucketName);
-        log.debug("{} milliseconds to partition objects", ellapsed(startTime));
+        log.debug("{} milliseconds to partition objects", elapsed(startTime));
         log.debug("{} GiB total memory used after partitions", totalMemory());
 
         return partitions;

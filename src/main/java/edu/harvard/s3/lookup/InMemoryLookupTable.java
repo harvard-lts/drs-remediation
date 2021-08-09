@@ -17,7 +17,7 @@
 package edu.harvard.s3.lookup;
 
 import static edu.harvard.s3.utility.RuntimeUtils.totalMemory;
-import static edu.harvard.s3.utility.TimeUtils.ellapsed;
+import static edu.harvard.s3.utility.TimeUtils.elapsed;
 
 import edu.harvard.s3.loader.Loader;
 import lombok.extern.slf4j.Slf4j;
@@ -47,7 +47,7 @@ public class InMemoryLookupTable implements LookupTable<String, String> {
             .forEach(e -> set(e.getKey(), e.getValue()));
 
         log.info("{} key value pairs loaded into memory", InMemoryMap.size());
-        log.debug("{} milliseconds to load in memory", ellapsed(startTime));
+        log.debug("{} milliseconds to load in memory", elapsed(startTime));
         log.debug("{} GiB total memory used after loading lookup table", totalMemory());
     }
 

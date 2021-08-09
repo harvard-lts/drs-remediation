@@ -24,7 +24,7 @@ import static edu.harvard.s3.utility.EnvUtils.getInputSkip;
 import static edu.harvard.s3.utility.EnvUtils.getParallelism;
 import static edu.harvard.s3.utility.RuntimeUtils.availableProcessors;
 import static edu.harvard.s3.utility.RuntimeUtils.totalMemory;
-import static edu.harvard.s3.utility.TimeUtils.ellapsed;
+import static edu.harvard.s3.utility.TimeUtils.elapsed;
 import static java.lang.System.nanoTime;
 
 import edu.harvard.s3.loader.FileLoader;
@@ -69,7 +69,7 @@ public final class S3Utils {
             @Override
             public void complete() {
                 log.info("remediation of S3 bucket {} completed in {} milliseconds",
-                    getAwsBucketName(), ellapsed(startTime));
+                    getAwsBucketName(), elapsed(startTime));
                 log.info("{} objects in bucket {} after remediation", s3.count(), getAwsBucketName());
                 lookup.unload();
                 s3.close();
