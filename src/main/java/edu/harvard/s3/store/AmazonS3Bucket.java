@@ -150,12 +150,7 @@ public class AmazonS3Bucket implements ObjectStore {
         }
 
         try {
-            DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
-                .bucket(this.bucketName)
-                .key(source.key())
-                .build();
-
-            s3.deleteObject(deleteObjectRequest);
+            delete(source);
         } catch (SdkClientException | S3Exception e) {
             log.error("Error while attempting to delete object", e);
             return -1;
@@ -191,6 +186,15 @@ public class AmazonS3Bucket implements ObjectStore {
         CopyObjectResult result = response.copyObjectResult();
 
         return normalizeEtag(result.eTag());
+    }
+
+    private void delete(S3Object object) {
+        DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+            .bucket(this.bucketName)
+            .key(object.key())
+            .build();
+
+        s3.deleteObject(deleteObjectRequest);
     }
 
     private String multiPartCopy(S3Object source, String destinationKey) {
