@@ -17,7 +17,7 @@
 package edu.harvard.s3.store;
 
 import static edu.harvard.s3.utility.RuntimeUtils.totalMemory;
-import static edu.harvard.s3.utility.TimeUtils.ellapsed;
+import static edu.harvard.s3.utility.TimeUtils.elapsed;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.removeEnd;
 import static org.apache.commons.lang3.StringUtils.removeStart;
@@ -117,7 +117,7 @@ public class AmazonS3Bucket implements ObjectStore {
             .sum();
 
         log.info("{} objects in bucket {}", count, bucketName);
-        log.debug("{} milliseconds to partition objects", ellapsed(startTime));
+        log.debug("{} milliseconds to partition objects", elapsed(startTime));
         log.debug("{} GiB total memory used after partitions", totalMemory());
 
         return partitions;
@@ -125,8 +125,6 @@ public class AmazonS3Bucket implements ObjectStore {
 
     @Override
     public int rename(S3Object source, String destinationKey) {
-        long startTime = System.nanoTime();
-
         try {
             String destiationEtag = source.size() < 5068709120L
                 ? copy(source, destinationKey)
@@ -144,8 +142,6 @@ public class AmazonS3Bucket implements ObjectStore {
             log.error("Error while attempting to copy object", e);
             return -1;
         }
-
-        log.info("{} milliseconds to copy {} to {}", ellapsed(startTime), source.key(), destinationKey);
 
         try {
             delete(source);

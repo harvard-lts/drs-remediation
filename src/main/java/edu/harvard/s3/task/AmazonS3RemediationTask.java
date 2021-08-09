@@ -16,6 +16,7 @@
 
 package edu.harvard.s3.task;
 
+import static edu.harvard.s3.utility.TimeUtils.elapsed;
 import static java.util.Objects.nonNull;
 
 import edu.harvard.s3.lookup.LookupTable;
@@ -83,9 +84,10 @@ public class AmazonS3RemediationTask implements ProcessTask {
         String destinationKey = mapKey(object.key());
 
         if (nonNull(destinationKey)) {
+            long startTime = System.nanoTime();
             int result = this.s3.rename(object, destinationKey);
-            remediation.info("{},{},{},{},{}",
-                object.key(), destinationKey, object.eTag(), object.size(), result);
+            remediation.info("{},{},{},{},{},{}",
+                object.key(), destinationKey, object.eTag(), object.size(), result, elapsed(startTime));
         }
     }
 
