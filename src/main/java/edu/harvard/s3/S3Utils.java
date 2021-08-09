@@ -18,6 +18,8 @@ package edu.harvard.s3;
 
 import static edu.harvard.s3.utility.EnvUtils.getAwsBucketName;
 import static edu.harvard.s3.utility.EnvUtils.getAwsMaxKeys;
+import static edu.harvard.s3.utility.EnvUtils.getAwsMaxPartSize;
+import static edu.harvard.s3.utility.EnvUtils.getAwsMultipartThreshold;
 import static edu.harvard.s3.utility.EnvUtils.getInputPath;
 import static edu.harvard.s3.utility.EnvUtils.getInputPattern;
 import static edu.harvard.s3.utility.EnvUtils.getInputSkip;
@@ -60,7 +62,13 @@ public final class S3Utils {
         final FileLoader loader = new FileLoader(inputPath, getInputPattern(), getInputSkip());
         final InMemoryLookupTable lookup = new InMemoryLookupTable(loader);
 
-        final AmazonS3Bucket s3 = new AmazonS3Bucket(getAwsBucketName(), getAwsMaxKeys(), endpointOverride);
+        final AmazonS3Bucket s3 = new AmazonS3Bucket(
+            getAwsBucketName(),
+            getAwsMaxKeys(),
+            getAwsMaxPartSize(),
+            getAwsMultipartThreshold(),
+            endpointOverride
+        );
 
         final long startTime = nanoTime();
 
@@ -82,7 +90,13 @@ public final class S3Utils {
         log.info("remediation of S3 bucket {} started", getAwsBucketName());
 
         s3.partition().forEach(objects -> {
-            ObjectStore store = new AmazonS3Bucket(getAwsBucketName(), getAwsMaxKeys(), endpointOverride);
+            ObjectStore store = new AmazonS3Bucket(
+                getAwsBucketName(),
+                getAwsMaxKeys(),
+                getAwsMaxPartSize(),
+                getAwsMultipartThreshold(),
+                endpointOverride
+            );
             processTaskQueue.submit(new AmazonS3RemediationTask(store, lookup, objects));
         });
     }

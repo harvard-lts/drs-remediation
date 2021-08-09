@@ -18,6 +18,8 @@ package edu.harvard.s3.store;
 
 import static edu.harvard.s3.utility.EnvUtils.getAwsBucketName;
 import static edu.harvard.s3.utility.EnvUtils.getAwsMaxKeys;
+import static edu.harvard.s3.utility.EnvUtils.getAwsMaxPartSize;
+import static edu.harvard.s3.utility.EnvUtils.getAwsMultipartThreshold;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -39,13 +41,25 @@ public class AmazonS3BucketTest extends AbstractStoreTest {
     @Test
     public void testMalformedUri() {
         assertThrows(RuntimeException.class, () -> {
-            new AmazonS3Bucket(getAwsBucketName(), getAwsMaxKeys(), "xp:\\fubar/|*/%~?foo-bar=test?/2021");
+            new AmazonS3Bucket(
+                getAwsBucketName(),
+                getAwsMaxKeys(),
+                getAwsMaxPartSize(),
+                getAwsMultipartThreshold(),
+                "xp:\\fubar/|*/%~?foo-bar=test?/2021"
+            );
         });
     }
 
     @Test
     public void testCount() {
-        AmazonS3Bucket store = new AmazonS3Bucket(getAwsBucketName(), getAwsMaxKeys(), endpointOverride);
+        AmazonS3Bucket store = new AmazonS3Bucket(
+            getAwsBucketName(),
+            getAwsMaxKeys(),
+            getAwsMaxPartSize(),
+            getAwsMultipartThreshold(),
+            endpointOverride
+        );
 
         int count = store.count();
 
@@ -56,7 +70,13 @@ public class AmazonS3BucketTest extends AbstractStoreTest {
 
     @Test
     public void testPartition() {
-        AmazonS3Bucket store = new AmazonS3Bucket(getAwsBucketName(), getAwsMaxKeys(), endpointOverride);
+        AmazonS3Bucket store = new AmazonS3Bucket(
+            getAwsBucketName(),
+            getAwsMaxKeys(),
+            getAwsMaxPartSize(),
+            getAwsMultipartThreshold(),
+            endpointOverride
+        );
 
         List<List<S3Object>> paritions = store.partition();
 
@@ -68,7 +88,13 @@ public class AmazonS3BucketTest extends AbstractStoreTest {
 
     @Test
     public void testRename(final S3Client s3) {
-        AmazonS3Bucket store = new AmazonS3Bucket(getAwsBucketName(), getAwsMaxKeys(), endpointOverride);
+        AmazonS3Bucket store = new AmazonS3Bucket(
+            getAwsBucketName(),
+            getAwsMaxKeys(),
+            getAwsMaxPartSize(),
+            getAwsMultipartThreshold(),
+            endpointOverride
+        );
 
         List<List<S3Object>> paritions = store.partition();
 

@@ -2,19 +2,21 @@
 
 ## Environment
 
-| Variable              | Description                              | Default                    |
-| --------------------- | ---------------------------------------- | -------------------------- |
-| LOG_LEVEL             | root log level                           | info                       |
-| REMEDIATION_LOG       | file path for remediation log            | ./external/remediation.log |
-| INPUT_PATH            | file path for input data                 | ./external/dump.txt        |
-| INPUT_PATTERN         | regex pattern per line to key-value pair | ^\\d+ : (\\d+) .*:(\\d+)$  |
-| INPUT_SKIP            | number of lines of input file to skip    | 2                          |
-| PARALLELISM           | number of concurrent tasks               | 12                         |
-| AWS_BUCKET_NAME       | AWS S3 bucket name                       | delivery                   |
-| AWS_MAX_KEYS          | AWS S3 list max keys                     | 5000                       |
-| AWS_REGION            | AWS region                               | see ~/.aws/config          |
-| AWS_ACCESS_KEY_ID     | AWS access key id                        | see ~/.aws/credentials     |
-| AWS_SECRET_ACCESS_KEY | AWS secret access key                    | see ~/.aws/credentials     |
+| Variable                | Description                              | Default                    |
+| ----------------------- | ---------------------------------------- | -------------------------- |
+| LOG_LEVEL               | root log level                           | info                       |
+| REMEDIATION_LOG         | file path for remediation log            | ./external/remediation.log |
+| INPUT_PATH              | file path for input data                 | ./external/dump.txt        |
+| INPUT_PATTERN           | regex pattern per line to key-value pair | ^\\d+ : (\\d+) .*:(\\d+)$  |
+| INPUT_SKIP              | number of lines of input file to skip    | 2                          |
+| PARALLELISM             | number of concurrent tasks               | 12                         |
+| AWS_BUCKET_NAME         | AWS S3 bucket name                       | delivery                   |
+| AWS_MAX_KEYS            | AWS S3 list max keys                     | 5000                       |
+| AWS_MAX_PART_SIZE       | AWS S3 max part size                     | 52428800 (50 MiB)          |
+| AWS_MULTIPART_THRESHOLD | AWS S3 multipart threashold              | 1073741824 (1 GiB)         |
+| AWS_REGION              | AWS region                               | see ~/.aws/config          |
+| AWS_ACCESS_KEY_ID       | AWS access key id                        | see ~/.aws/credentials     |
+| AWS_SECRET_ACCESS_KEY   | AWS secret access key                    | see ~/.aws/credentials     |
 
 ## Tasks
 
@@ -74,3 +76,5 @@ Run
 ```
 docker-compose up
 ```
+
+> If using docker, do not forget to copy `.env.sample` to `.env` and update accordingly.

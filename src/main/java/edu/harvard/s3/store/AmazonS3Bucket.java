@@ -59,23 +59,32 @@ import software.amazon.awssdk.services.s3.paginators.ListObjectsV2Iterable;
 @Slf4j
 public class AmazonS3Bucket implements ObjectStore {
 
-    // copy large files 100 MiB per part
-    private static final long MAX_PART_SIZE = 100 * 1024 * 1024;
-
     private final S3Client s3;
 
     private final String bucketName;
 
     private final int maxKeys;
 
+    private final long maxPartSize;
+
+    private final long multipartThreshold;
+
     /**
      * Amazon S3 bucket object store constructor.
      *
-     * @param bucketName       AWS bucket name
-     * @param maxKeys          max keys for listing objects
-     * @param endpointOverride AWS endpoint override
+     * @param bucketName         AWS bucket name
+     * @param maxKeys            max keys for listing objects
+     * @param maxPartSize        max part size for multipart upload
+     * @param multipartThreshold multipart threshold
+     * @param endpointOverride   AWS endpoint override
      */
-    public AmazonS3Bucket(String bucketName, int maxKeys, String endpointOverride) {
+    public AmazonS3Bucket(
+        String bucketName,
+        int maxKeys,
+        long maxPartSize,
+        long multipartThreshold,
+        String endpointOverride
+    ) {
         S3ClientBuilder builder = S3Client.builder();
         if (Objects.nonNull(endpointOverride)) {
             try {
@@ -87,6 +96,8 @@ public class AmazonS3Bucket implements ObjectStore {
         this.s3 = builder.build();
         this.bucketName = bucketName;
         this.maxKeys = maxKeys;
+        this.maxPartSize = maxPartSize;
+        this.multipartThreshold = multipartThreshold;
     }
 
     @Override
@@ -126,7 +137,7 @@ public class AmazonS3Bucket implements ObjectStore {
     @Override
     public int rename(S3Object source, String destinationKey) {
         try {
-            String destiationEtag = source.size() < 5068709120L
+            String destiationEtag = source.size() < multipartThreshold
                 ? copy(source, destinationKey)
                 : multiPartCopy(source, destinationKey);
 
@@ -208,7 +219,7 @@ public class AmazonS3Bucket implements ObjectStore {
 
         List<Long> positions = new ArrayList<>();
 
-        for (long position = 0; position < source.size(); position += MAX_PART_SIZE) {
+        for (long position = 0; position < source.size(); position += maxPartSize) {
             positions.add(position);
         }
 
@@ -265,7 +276,7 @@ public class AmazonS3Bucket implements ObjectStore {
     }
 
     private String copySourceRange(long start, long size) {
-        long end = start + MAX_PART_SIZE - 1;
+        long end = start + maxPartSize - 1;
         if (end > size) {
             end = size - 1;
         }
