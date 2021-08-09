@@ -29,6 +29,8 @@ hs_err_pid*
 
 target/
 
+temp/
+
 .classpath
 .factorypath
 .project
