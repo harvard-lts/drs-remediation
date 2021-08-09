@@ -4,6 +4,8 @@ import static edu.harvard.s3.utility.EnvUtils.getAwsBucketName;
 import static edu.harvard.s3.utility.EnvUtils.getInputPattern;
 import static edu.harvard.s3.utility.EnvUtils.getInputSkip;
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.removeEnd;
+import static org.apache.commons.lang3.StringUtils.removeStart;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -11,13 +13,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.adobe.testing.s3mock.junit5.S3MockExtension;
 import edu.harvard.s3.loader.FileLoader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
@@ -73,7 +75,6 @@ public abstract class AbstractStoreTest {
             .collect(Collectors.toList());
 
         for (String id : ids) {
-
             String metskey = format("0%1$s/v1/content/descriptor/%1$s_mets.xml", id);
 
             PutObjectRequest metsObjectRequest = PutObjectRequest.builder()
@@ -83,7 +84,7 @@ public abstract class AbstractStoreTest {
 
             PutObjectResponse metsObjectResponse = s3.putObject(metsObjectRequest, RequestBody.fromFile(mets));
 
-            assertEquals(localEtag(mets), metsObjectResponse.eTag());
+            assertEquals("93286b7fccf6f6092628ada8b85c0727", normalizeEtag(metsObjectResponse.eTag()));
 
             String modskey = format("0%1$s/v1/content/metadata/%1$s_mods.xml", id);
 
@@ -94,7 +95,7 @@ public abstract class AbstractStoreTest {
 
             PutObjectResponse modsObjectResponse = s3.putObject(modsObjectRequest, RequestBody.fromFile(mods));
 
-            assertEquals(localEtag(mods), modsObjectResponse.eTag());
+            assertEquals("93286b7fccf6f6092628ada8b85c0727", normalizeEtag(modsObjectResponse.eTag()));
 
             String pngkey = format("0%1$s/v1/content/data/%1$s.png", id);
 
@@ -105,8 +106,53 @@ public abstract class AbstractStoreTest {
 
             PutObjectResponse pngObjectResponse = s3.putObject(pngObjectRequest, RequestBody.fromFile(png));
 
-            assertEquals(localEtag(png), pngObjectResponse.eTag());
+            assertEquals("3d8ea40458e95bc4091c5e3460a275bb", normalizeEtag(pngObjectResponse.eTag()));
         }
+
+        /*
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        String separator = "%2F";
+
+        String lfsKey = format("0%1$s%2$sv1%2$scontent%2$sdata%2$s%1$s.lfs", ids.get(0), separator);
+
+        Files.createDirectories(Path.of(format("temp/delivery/%s", lfsKey)));
+
+        String lfsFileDataPath = format("temp/delivery/%s/fileData", lfsKey);
+
+        File lfs = createLargeFile(lfsFileDataPath, 5368709121L);
+
+        assertTrue(lfs.exists());
+
+
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+
+        String creationDate = formatter.format(new Date());
+        Date now = new Date();
+        String modificationDate = formatter.format(now);
+
+        String nul = null;
+
+        final ObjectNode lfsNode = objectMapper.createObjectNode();
+        lfsNode.put("name", lfsKey);
+        lfsNode.put("size", lfs.length());
+        lfsNode.put("creationDate", creationDate);
+        lfsNode.put("modificationDate", modificationDate);
+        lfsNode.put("md5", "554157458fc3c9573486e4add4a8fd50");
+        lfsNode.put("contentType", "text/plain");
+        lfsNode.put("contentEncoding", nul);
+        lfsNode.put("kmsEncryption", nul);
+        lfsNode.put("lastModified", now.getTime());
+        lfsNode.put("dataFile", lfs.getAbsolutePath());
+        lfsNode.put("kmsKeyId", nul);
+        lfsNode.putObject("userMetadata");
+        lfsNode.putArray("tags");
+        lfsNode.put("encrypted", false);
+
+        String lfsMetadata = format("temp/delivery/%s/metadata", lfsKey);
+
+        objectMapper.writeValue(new File(lfsMetadata), lfsNode);
+        */
 
         s3.close();
     }
@@ -146,19 +192,44 @@ public abstract class AbstractStoreTest {
         s3.close();
     }
 
-    String localEtag(File file) throws NoSuchAlgorithmException, IOException {
-        byte[] bytes = FileUtils.readFileToByteArray(file);
-        MessageDigest md = MessageDigest.getInstance("MD5");
-        md.update(bytes);
-        // bytes to hex
-        StringBuilder result = new StringBuilder();
-        result.append("\"");
-        for (byte b : md.digest()) {
-            result.append(String.format("%02x", b));
+    String md5(File file) throws NoSuchAlgorithmException, IOException {
+        MessageDigest digest = MessageDigest.getInstance("MD5");
+
+        try (FileInputStream fis = new FileInputStream(file)) {
+            byte[] byteArray = new byte[1024];
+            int bytesCount = 0;
+            while ((bytesCount = fis.read(byteArray)) != -1) {
+                digest.update(byteArray, 0, bytesCount);
+            }
         }
-        result.append("\"");
+
+        byte[] bytes = digest.digest();
+
+        StringBuilder result = new StringBuilder();
+
+        for (int i = 0; i < bytes.length; i++) {
+            result.append(Integer.toString((bytes[i] & 0xff) + 0x100, 16).substring(1));
+        }
 
         return result.toString();
+    }
+
+    /*
+    private File createLargeFile(final String filename, final long sizeInBytes) throws IOException {
+        File file = new File(filename);
+        file.createNewFile();
+
+        try (RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw")) {
+            randomAccessFile.setLength(sizeInBytes);
+            randomAccessFile.close();
+
+            return file;
+        }
+    }
+    */
+
+    private String normalizeEtag(String etag) {
+        return removeEnd(removeStart(etag, "\""), "\"");
     }
 
 }

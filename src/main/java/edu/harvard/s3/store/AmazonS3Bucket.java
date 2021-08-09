@@ -25,8 +25,11 @@ import static org.apache.commons.lang3.StringUtils.removeStart;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.core.exception.SdkClientException;
@@ -56,7 +59,8 @@ import software.amazon.awssdk.services.s3.paginators.ListObjectsV2Iterable;
 @Slf4j
 public class AmazonS3Bucket implements ObjectStore {
 
-    private static final long MAX_PART_SIZE = 5 * 1024 * 1024;
+    // copy large files 100 MiB per part
+    private static final long MAX_PART_SIZE = 100 * 1024 * 1024;
 
     private final S3Client s3;
 
@@ -121,24 +125,16 @@ public class AmazonS3Bucket implements ObjectStore {
 
     @Override
     public int rename(S3Object source, String destinationKey) {
-        if (source.size() >= 5368709120L) {
-            log.warn("skipping copy: source object {} is over 5 GiB copy limit at {} bytes",
-                source.key(), source.size());
-            return 1;
-        }
-
-        String sourceEtag = normalizeEtag(source.eTag());
-
-        // String destiationEtag = source.size() < 5368709120L
-        //     ? copy(source, destinationKey)
-        //     : multiPartCopy(source, destinationKey);
+        long startTime = System.nanoTime();
 
         try {
-            String destiationEtag = copy(source, destinationKey);
+            String destiationEtag = source.size() < 5068709120L
+                ? copy(source, destinationKey)
+                : multiPartCopy(source, destinationKey);
 
-            if (!destiationEtag.equals(sourceEtag)) {
+            if (!destiationEtag.equals(source.eTag())) {
                 log.warn("copy failure: source etag {} does not match destination etag {}",
-                    sourceEtag, destiationEtag);
+                    source.eTag(), destiationEtag);
                 return -1;
             }
 
@@ -148,6 +144,8 @@ public class AmazonS3Bucket implements ObjectStore {
             log.error("Error while attempting to copy object", e);
             return -1;
         }
+
+        log.info("{} milliseconds to copy {} to {}", ellapsed(startTime), source.key(), destinationKey);
 
         try {
             delete(source);
@@ -198,6 +196,7 @@ public class AmazonS3Bucket implements ObjectStore {
     }
 
     private String multiPartCopy(S3Object source, String destinationKey) {
+        log.info("attempting multipart upload {} to {}", source.key(), destinationKey);
         CreateMultipartUploadRequest createRequest = CreateMultipartUploadRequest.builder()
             .bucket(this.bucketName)
             .key(destinationKey)
@@ -209,34 +208,49 @@ public class AmazonS3Bucket implements ObjectStore {
 
         String uploadId = createResponse.uploadId();
 
-        int partNumber = 1;
+        AtomicInteger partNumber = new AtomicInteger(0);
 
-        for (long pos = 0; pos < source.size(); pos += MAX_PART_SIZE) {
-            String copySourceRange = copySourceRange(pos, source.size());
+        List<Long> positions = new ArrayList<>();
 
-            UploadPartCopyRequest partRequest = UploadPartCopyRequest.builder()
-                .sourceBucket(this.bucketName)
-                .sourceKey(source.key())
-                .destinationBucket(this.bucketName)
-                .destinationKey(destinationKey)
-                .copySourceRange(copySourceRange)
-                .partNumber(partNumber)
-                .uploadId(uploadId)
-                .build();
-
-            UploadPartCopyResponse partResponse = s3.uploadPartCopy(partRequest);
-
-            CopyPartResult copyPartResult = partResponse.copyPartResult();
-
-            CompletedPart completedPart = CompletedPart.builder()
-                .eTag(copyPartResult.eTag())
-                .partNumber(partNumber)
-                .build();
-
-            completedParts.add(completedPart);
-
-            partNumber++;
+        for (long position = 0; position < source.size(); position += MAX_PART_SIZE) {
+            positions.add(position);
         }
+
+        positions.parallelStream()
+            .forEach(position -> {
+                int pn = partNumber.incrementAndGet();
+                String copySourceRange = copySourceRange(position, source.size());
+
+                UploadPartCopyRequest partRequest = UploadPartCopyRequest.builder()
+                    .sourceBucket(this.bucketName)
+                    .sourceKey(source.key())
+                    .destinationBucket(this.bucketName)
+                    .destinationKey(destinationKey)
+                    .copySourceRange(copySourceRange)
+                    .partNumber(pn)
+                    .uploadId(uploadId)
+                    .build();
+
+                UploadPartCopyResponse partResponse = s3.uploadPartCopy(partRequest);
+
+                CopyPartResult copyPartResult = partResponse.copyPartResult();
+
+                CompletedPart completedPart = CompletedPart.builder()
+                    .eTag(normalizeEtag(copyPartResult.eTag()))
+                    .partNumber(pn)
+                    .build();
+
+                completedParts.add(completedPart);
+            });
+
+        Collections.sort(completedParts, new Comparator<CompletedPart>() {
+
+            @Override
+            public int compare(CompletedPart cp1, CompletedPart cp2) {
+                return cp1.partNumber().compareTo(cp2.partNumber());
+            }
+
+        });
 
         CompletedMultipartUpload completedMultipartUpload = CompletedMultipartUpload.builder()
             .parts(completedParts)
@@ -259,7 +273,7 @@ public class AmazonS3Bucket implements ObjectStore {
         if (end > size) {
             end = size - 1;
         }
-        return format("bytes=%s-%s", start, end);
+        return format("bytes=%d-%d", start, end);
     }
 
     private String normalizeEtag(String etag) {
