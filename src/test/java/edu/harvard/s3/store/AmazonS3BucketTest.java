@@ -63,7 +63,7 @@ public class AmazonS3BucketTest extends AbstractStoreTest {
 
         int count = store.count();
 
-        assertEquals(20, count);
+        assertEquals(15, count);
 
         store.close();
     }
@@ -81,7 +81,7 @@ public class AmazonS3BucketTest extends AbstractStoreTest {
         List<List<S3Object>> paritions = store.partition();
 
         assertEquals(1, paritions.size());
-        assertEquals(20, paritions.get(0).size());
+        assertEquals(15, paritions.get(0).size());
 
         store.close();
     }

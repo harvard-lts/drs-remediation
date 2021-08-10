@@ -40,7 +40,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import lombok.Data;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -112,6 +111,7 @@ public abstract class AbstractStoreTest {
             putObject(s3, mods, format("0%1$s/v1/content/metadata/%1$s_mods.xml", id));
             putObject(s3, png, format("0%1$s/v1/content/data/%1$s.png", id));
 
+            /* multipart tests require patch to S3Mock, https://github.com/adobe/S3Mock/pull/278
             String filename = format("target/%1$s.lfs", id);
             long sizeInBytes = random(104857600L, 262144000L);
 
@@ -119,6 +119,7 @@ public abstract class AbstractStoreTest {
             lfs.deleteOnExit();
 
             multipartUpload(s3, lfs, format("0%1$s/v1/content/data/%1$s.lfs", id));
+            */
         }
 
         s3.close();
