@@ -1,3 +1,19 @@
+/**
+ * Copyright (c) 2021 President and Fellows of Harvard College
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.harvard.s3.store;
 
 import static edu.harvard.s3.utility.EnvUtils.getAwsBucketName;
@@ -15,11 +31,12 @@ import edu.harvard.s3.loader.FileLoader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
@@ -84,7 +101,7 @@ public abstract class AbstractStoreTest {
 
             PutObjectResponse metsObjectResponse = s3.putObject(metsObjectRequest, RequestBody.fromFile(mets));
 
-            assertEquals("93286b7fccf6f6092628ada8b85c0727", normalizeEtag(metsObjectResponse.eTag()));
+            assertEquals(md5(mets), normalizeEtag(metsObjectResponse.eTag()));
 
             String modskey = format("0%1$s/v1/content/metadata/%1$s_mods.xml", id);
 
@@ -95,7 +112,7 @@ public abstract class AbstractStoreTest {
 
             PutObjectResponse modsObjectResponse = s3.putObject(modsObjectRequest, RequestBody.fromFile(mods));
 
-            assertEquals("93286b7fccf6f6092628ada8b85c0727", normalizeEtag(modsObjectResponse.eTag()));
+            assertEquals(md5(mods), normalizeEtag(modsObjectResponse.eTag()));
 
             String pngkey = format("0%1$s/v1/content/data/%1$s.png", id);
 
@@ -106,53 +123,8 @@ public abstract class AbstractStoreTest {
 
             PutObjectResponse pngObjectResponse = s3.putObject(pngObjectRequest, RequestBody.fromFile(png));
 
-            assertEquals("3d8ea40458e95bc4091c5e3460a275bb", normalizeEtag(pngObjectResponse.eTag()));
+            assertEquals(md5(png), normalizeEtag(pngObjectResponse.eTag()));
         }
-
-        /*
-        ObjectMapper objectMapper = new ObjectMapper();
-
-        String separator = "%2F";
-
-        String lfsKey = format("0%1$s%2$sv1%2$scontent%2$sdata%2$s%1$s.lfs", ids.get(0), separator);
-
-        Files.createDirectories(Path.of(format("temp/delivery/%s", lfsKey)));
-
-        String lfsFileDataPath = format("temp/delivery/%s/fileData", lfsKey);
-
-        File lfs = createLargeFile(lfsFileDataPath, 5368709121L);
-
-        assertTrue(lfs.exists());
-
-
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-
-        String creationDate = formatter.format(new Date());
-        Date now = new Date();
-        String modificationDate = formatter.format(now);
-
-        String nul = null;
-
-        final ObjectNode lfsNode = objectMapper.createObjectNode();
-        lfsNode.put("name", lfsKey);
-        lfsNode.put("size", lfs.length());
-        lfsNode.put("creationDate", creationDate);
-        lfsNode.put("modificationDate", modificationDate);
-        lfsNode.put("md5", "554157458fc3c9573486e4add4a8fd50");
-        lfsNode.put("contentType", "text/plain");
-        lfsNode.put("contentEncoding", nul);
-        lfsNode.put("kmsEncryption", nul);
-        lfsNode.put("lastModified", now.getTime());
-        lfsNode.put("dataFile", lfs.getAbsolutePath());
-        lfsNode.put("kmsKeyId", nul);
-        lfsNode.putObject("userMetadata");
-        lfsNode.putArray("tags");
-        lfsNode.put("encrypted", false);
-
-        String lfsMetadata = format("temp/delivery/%s/metadata", lfsKey);
-
-        objectMapper.writeValue(new File(lfsMetadata), lfsNode);
-        */
 
         s3.close();
     }
@@ -192,41 +164,9 @@ public abstract class AbstractStoreTest {
         s3.close();
     }
 
-    String md5(File file) throws NoSuchAlgorithmException, IOException {
-        MessageDigest digest = MessageDigest.getInstance("MD5");
-
-        try (FileInputStream fis = new FileInputStream(file)) {
-            byte[] byteArray = new byte[1024];
-            int bytesCount = 0;
-            while ((bytesCount = fis.read(byteArray)) != -1) {
-                digest.update(byteArray, 0, bytesCount);
-            }
-        }
-
-        byte[] bytes = digest.digest();
-
-        StringBuilder result = new StringBuilder();
-
-        for (int i = 0; i < bytes.length; i++) {
-            result.append(Integer.toString((bytes[i] & 0xff) + 0x100, 16).substring(1));
-        }
-
-        return result.toString();
+    private String md5(File file) throws IOException {
+        return DigestUtils.md5Hex(FileUtils.openInputStream(file));
     }
-
-    /*
-    private File createLargeFile(final String filename, final long sizeInBytes) throws IOException {
-        File file = new File(filename);
-        file.createNewFile();
-
-        try (RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw")) {
-            randomAccessFile.setLength(sizeInBytes);
-            randomAccessFile.close();
-
-            return file;
-        }
-    }
-    */
 
     private String normalizeEtag(String etag) {
         return removeEnd(removeStart(etag, "\""), "\"");
