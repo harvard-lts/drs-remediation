@@ -72,7 +72,7 @@ public class EnvUtilsTest {
 
     @Test
     public void testGetAwsMultipartThreshold() {
-        assertEquals(1073741824L, EnvUtils.getAwsMultipartThreshold());
+        assertEquals(104857600L, EnvUtils.getAwsMultipartThreshold());
     }
 
 }

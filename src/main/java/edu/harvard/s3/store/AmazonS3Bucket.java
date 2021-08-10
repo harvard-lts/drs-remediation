@@ -29,7 +29,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.core.exception.SdkClientException;
@@ -203,7 +202,6 @@ public class AmazonS3Bucket implements ObjectStore {
     }
 
     private String multiPartCopy(S3Object source, String destinationKey) {
-        log.info("attempting multipart upload {} to {}", source.key(), destinationKey);
         CreateMultipartUploadRequest createRequest = CreateMultipartUploadRequest.builder()
             .bucket(this.bucketName)
             .key(destinationKey)
@@ -215,18 +213,17 @@ public class AmazonS3Bucket implements ObjectStore {
 
         String uploadId = createResponse.uploadId();
 
-        AtomicInteger partNumber = new AtomicInteger(0);
+        List<ObjectPart> parts = new ArrayList<>();
 
-        List<Long> positions = new ArrayList<>();
+        int partNumber = 0;
 
         for (long position = 0; position < source.size(); position += maxPartSize) {
-            positions.add(position);
+            parts.add(new ObjectPart(++partNumber, position));
         }
 
-        positions.parallelStream()
-            .forEach(position -> {
-                int pn = partNumber.incrementAndGet();
-                String copySourceRange = copySourceRange(position, source.size());
+        parts.parallelStream()
+            .forEach(part -> {
+                String copySourceRange = copySourceRange(part.getPosition(), source.size());
 
                 UploadPartCopyRequest partRequest = UploadPartCopyRequest.builder()
                     .sourceBucket(this.bucketName)
@@ -234,7 +231,7 @@ public class AmazonS3Bucket implements ObjectStore {
                     .destinationBucket(this.bucketName)
                     .destinationKey(destinationKey)
                     .copySourceRange(copySourceRange)
-                    .partNumber(pn)
+                    .partNumber(part.getNumber())
                     .uploadId(uploadId)
                     .build();
 
@@ -244,7 +241,7 @@ public class AmazonS3Bucket implements ObjectStore {
 
                 CompletedPart completedPart = CompletedPart.builder()
                     .eTag(normalizeEtag(copyPartResult.eTag()))
-                    .partNumber(pn)
+                    .partNumber(part.getNumber())
                     .build();
 
                 completedParts.add(completedPart);
@@ -276,10 +273,8 @@ public class AmazonS3Bucket implements ObjectStore {
     }
 
     private String copySourceRange(long start, long size) {
-        long end = start + maxPartSize - 1;
-        if (end > size) {
-            end = size - 1;
-        }
+        long end = Math.min(start + maxPartSize - 1, size - 1);
+
         return format("bytes=%d-%d", start, end);
     }
 

@@ -47,7 +47,7 @@ public final class EnvUtils {
         AWS_BUCKET_NAME, "delivery",
         AWS_MAX_KEYS, "5000",
         AWS_MAX_PART_SIZE, "52428800",
-        AWS_MULTIPART_THRESHOLD, "1073741824"
+        AWS_MULTIPART_THRESHOLD, "104857600"
     );
 
     private EnvUtils() { }
@@ -116,7 +116,7 @@ public final class EnvUtils {
     }
 
     /**
-     * Retrieve environment AWS multipart threshold. (default 1073741824 = 1 GiB)
+     * Retrieve environment AWS multipart threshold. (default 104857600 = 100 MiB)
      *
      * @return AWS multipart threshold
      */
