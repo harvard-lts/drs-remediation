@@ -57,7 +57,7 @@ public class EnvUtilsTest {
 
     @Test
     public void testGetAwsBucketName() {
-        assertEquals("delivery", EnvUtils.getAwsBucketName());
+        assertEquals("harvard-drs-delivery", EnvUtils.getAwsBucketName());
     }
 
     @Test

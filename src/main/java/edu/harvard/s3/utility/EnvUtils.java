@@ -41,7 +41,7 @@ public final class EnvUtils {
         INPUT_PATH, "./external/dump.txt",
         INPUT_PATTERN, "^\\d+ : (\\d+) .*:(\\d+)$",
         INPUT_SKIP, "2",
-        AWS_BUCKET_NAME, "delivery",
+        AWS_BUCKET_NAME, "harvard-drs-delivery",
         AWS_MAX_KEYS, "5000"
     );
 
@@ -84,7 +84,7 @@ public final class EnvUtils {
     }
 
     /**
-     * Retrieve environment AWS bucket name. (default delivery)
+     * Retrieve environment AWS bucket name. (default harvard-drs-delivery)
      *
      * @return AWS bucket name
      */

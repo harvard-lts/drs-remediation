@@ -10,7 +10,7 @@
 | INPUT_PATTERN         | regex pattern per line to key-value pair | ^\\d+ : (\\d+) .*:(\\d+)$  |
 | INPUT_SKIP            | number of lines of input file to skip    | 2                          |
 | PARALLELISM           | number of concurrent tasks               | 12                         |
-| AWS_BUCKET_NAME       | AWS S3 bucket name                       | delivery                   |
+| AWS_BUCKET_NAME       | AWS S3 bucket name                       | harvard-drs-delivery       |
 | AWS_MAX_KEYS          | AWS S3 list max keys                     | 5000                       |
 | AWS_REGION            | AWS region                               | see ~/.aws/config          |
 | AWS_ACCESS_KEY_ID     | AWS access key id                        | see ~/.aws/credentials     |
