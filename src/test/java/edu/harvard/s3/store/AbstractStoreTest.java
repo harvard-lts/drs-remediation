@@ -30,7 +30,6 @@ import com.adobe.testing.s3mock.junit5.S3MockExtension;
 import edu.harvard.s3.loader.FileLoader;
 import java.io.File;
 import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -66,7 +65,7 @@ public abstract class AbstractStoreTest {
     protected final String endpointOverride = "http://localhost:9090";
 
     @BeforeAll
-    void setup(final S3Client s3) throws IOException, NoSuchAlgorithmException {
+    void setup(final S3Client s3) throws IOException {
         CreateBucketRequest createBucketRequest = CreateBucketRequest.builder()
             .bucket(getAwsBucketName())
             .build();
@@ -91,39 +90,9 @@ public abstract class AbstractStoreTest {
             .collect(Collectors.toList());
 
         for (String id : ids) {
-
-            String metskey = format("0%1$s/v1/content/descriptor/%1$s_mets.xml", id);
-
-            PutObjectRequest metsObjectRequest = PutObjectRequest.builder()
-                .bucket(getAwsBucketName())
-                .key(metskey)
-                .build();
-
-            PutObjectResponse metsObjectResponse = s3.putObject(metsObjectRequest, RequestBody.fromFile(mets));
-
-            assertEquals(md5(mets), normalizeEtag(metsObjectResponse.eTag()));
-
-            String modskey = format("0%1$s/v1/content/metadata/%1$s_mods.xml", id);
-
-            PutObjectRequest modsObjectRequest = PutObjectRequest.builder()
-                .bucket(getAwsBucketName())
-                .key(modskey)
-                .build();
-
-            PutObjectResponse modsObjectResponse = s3.putObject(modsObjectRequest, RequestBody.fromFile(mods));
-
-            assertEquals(md5(mods), normalizeEtag(modsObjectResponse.eTag()));
-
-            String pngkey = format("0%1$s/v1/content/data/%1$s.png", id);
-
-            PutObjectRequest pngObjectRequest = PutObjectRequest.builder()
-                .bucket(getAwsBucketName())
-                .key(pngkey)
-                .build();
-
-            PutObjectResponse pngObjectResponse = s3.putObject(pngObjectRequest, RequestBody.fromFile(png));
-
-            assertEquals(md5(png), normalizeEtag(pngObjectResponse.eTag()));
+            putObject(s3, mets, format("0%1$s/v1/content/descriptor/%1$s_mets.xml", id));
+            putObject(s3, mods, format("0%1$s/v1/content/metadata/%1$s_mods.xml", id));
+            putObject(s3, png, format("0%1$s/v1/content/data/%1$s.png", id));
         }
 
         s3.close();
@@ -164,7 +133,18 @@ public abstract class AbstractStoreTest {
         s3.close();
     }
 
-    private String md5(File file) throws IOException {
+    private void putObject(final S3Client s3, File file, String key) throws IOException {
+        PutObjectRequest request = PutObjectRequest.builder()
+            .bucket(getAwsBucketName())
+            .key(key)
+            .build();
+
+        PutObjectResponse response = s3.putObject(request, RequestBody.fromFile(file));
+
+        assertEquals(md5Hex(file), normalizeEtag(response.eTag()));
+    }
+
+    private String md5Hex(File file) throws IOException {
         return DigestUtils.md5Hex(FileUtils.openInputStream(file));
     }
 
