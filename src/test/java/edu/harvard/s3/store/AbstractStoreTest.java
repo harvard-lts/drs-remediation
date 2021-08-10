@@ -160,27 +160,6 @@ public abstract class AbstractStoreTest {
         s3.close();
     }
 
-    private long random(long low, long high) {
-        return ThreadLocalRandom.current().nextLong(low, high);
-    }
-
-    private File createLargeFile(final String filename, final long sizeInBytes) {
-        try {
-            File file = new File(filename);
-            file.createNewFile();
-
-            try (RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw")) {
-                randomAccessFile.setLength(sizeInBytes);
-                randomAccessFile.close();
-
-                return file;
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
-    }
-
     private void putObject(final S3Client s3, File file, String key) {
         PutObjectRequest metsObjectRequest = PutObjectRequest.builder()
             .bucket(getAwsBucketName())
@@ -280,6 +259,23 @@ public abstract class AbstractStoreTest {
         assertEquals(etag, normalizeEtag(completeResponse.eTag()));
     }
 
+    private File createLargeFile(final String filename, final long sizeInBytes) {
+        try {
+            File file = new File(filename);
+            file.createNewFile();
+
+            try (RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw")) {
+                randomAccessFile.setLength(sizeInBytes);
+                randomAccessFile.close();
+
+                return file;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+
     private byte[] readByteRange(String filePath, long start, int length) {
         try (RandomAccessFile randomAccessFile = new RandomAccessFile(filePath, "r")) {
             byte[] buffer = new byte[length];
@@ -304,6 +300,10 @@ public abstract class AbstractStoreTest {
 
     private byte[] md5(byte[] bytes) {
         return DigestUtils.md5(bytes);
+    }
+
+    private long random(long low, long high) {
+        return ThreadLocalRandom.current().nextLong(low, high);
     }
 
     private String normalizeEtag(String etag) {
