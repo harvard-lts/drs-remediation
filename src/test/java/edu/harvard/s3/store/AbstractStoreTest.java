@@ -1,9 +1,27 @@
+/**
+ * Copyright (c) 2021 President and Fellows of Harvard College
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package edu.harvard.s3.store;
 
 import static edu.harvard.s3.utility.EnvUtils.getAwsBucketName;
 import static edu.harvard.s3.utility.EnvUtils.getInputPattern;
 import static edu.harvard.s3.utility.EnvUtils.getInputSkip;
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.removeEnd;
+import static org.apache.commons.lang3.StringUtils.removeStart;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -12,11 +30,11 @@ import com.adobe.testing.s3mock.junit5.S3MockExtension;
 import edu.harvard.s3.loader.FileLoader;
 import java.io.File;
 import java.io.IOException;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -83,7 +101,7 @@ public abstract class AbstractStoreTest {
 
             PutObjectResponse metsObjectResponse = s3.putObject(metsObjectRequest, RequestBody.fromFile(mets));
 
-            assertEquals(localEtag(mets), metsObjectResponse.eTag());
+            assertEquals(md5(mets), normalizeEtag(metsObjectResponse.eTag()));
 
             String modskey = format("0%1$s/v1/content/metadata/%1$s_mods.xml", id);
 
@@ -94,7 +112,7 @@ public abstract class AbstractStoreTest {
 
             PutObjectResponse modsObjectResponse = s3.putObject(modsObjectRequest, RequestBody.fromFile(mods));
 
-            assertEquals(localEtag(mods), modsObjectResponse.eTag());
+            assertEquals(md5(mods), normalizeEtag(modsObjectResponse.eTag()));
 
             String pngkey = format("0%1$s/v1/content/data/%1$s.png", id);
 
@@ -105,7 +123,7 @@ public abstract class AbstractStoreTest {
 
             PutObjectResponse pngObjectResponse = s3.putObject(pngObjectRequest, RequestBody.fromFile(png));
 
-            assertEquals(localEtag(png), pngObjectResponse.eTag());
+            assertEquals(md5(png), normalizeEtag(pngObjectResponse.eTag()));
         }
 
         s3.close();
@@ -146,19 +164,12 @@ public abstract class AbstractStoreTest {
         s3.close();
     }
 
-    String localEtag(File file) throws NoSuchAlgorithmException, IOException {
-        byte[] bytes = FileUtils.readFileToByteArray(file);
-        MessageDigest md = MessageDigest.getInstance("MD5");
-        md.update(bytes);
-        // bytes to hex
-        StringBuilder result = new StringBuilder();
-        result.append("\"");
-        for (byte b : md.digest()) {
-            result.append(String.format("%02x", b));
-        }
-        result.append("\"");
+    private String md5(File file) throws IOException {
+        return DigestUtils.md5Hex(FileUtils.openInputStream(file));
+    }
 
-        return result.toString();
+    private String normalizeEtag(String etag) {
+        return removeEnd(removeStart(etag, "\""), "\"");
     }
 
 }
