@@ -136,13 +136,14 @@ public class AmazonS3Bucket implements ObjectStore {
     @Override
     public int rename(S3Object source, String destinationKey) {
         try {
+            String sourceEtag = normalizeEtag(source.eTag());
             String destiationEtag = source.size() > multipartThreshold
                 ? multiPartCopy(source, destinationKey)
                 : copy(source, destinationKey);
 
-            if (!destiationEtag.equals(source.eTag())) {
+            if (!destiationEtag.equals(sourceEtag)) {
                 log.warn("copy failure: source etag {} does not match destination etag {}",
-                    source.eTag(), destiationEtag);
+                    sourceEtag, destiationEtag);
                 return -1;
             }
 
