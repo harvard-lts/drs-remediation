@@ -160,5 +160,4 @@ public class AmazonS3BucketTest extends AbstractStoreTest {
         assertEquals(1, result);
     }
 
-
 }

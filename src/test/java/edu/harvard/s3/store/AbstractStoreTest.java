@@ -177,8 +177,6 @@ public abstract class AbstractStoreTest {
 
         CreateMultipartUploadResponse createResponse = s3.createMultipartUpload(createRequest);
 
-        List<CompletedPart> completedParts = new ArrayList<>();
-
         String uploadId = createResponse.uploadId();
 
         List<ObjectPart> parts = new ArrayList<>();
@@ -191,29 +189,31 @@ public abstract class AbstractStoreTest {
             parts.add(new ObjectPart(++partNumber, position));
         }
 
-        parts.parallelStream()
-            .forEach(part -> {
+        List<CompletedPart> completedParts = parts.parallelStream()
+            .map(part -> {
                 long length = Math.min(getAwsMaxPartSize(), file.length() - part.getPosition());
                 byte[] bytes = readByteRange(file.getAbsolutePath(), part.getPosition(), (int) length);
+
+                String contentMd5 = md5Hex(bytes);
 
                 md5Parts.add(new Md5Part(part.getNumber(), md5(bytes)));
 
                 UploadPartRequest partRequest = UploadPartRequest.builder()
                     .bucket(getAwsBucketName())
                     .key(key)
+                    .contentLength(length)
+                    .contentMD5(contentMd5)
                     .partNumber(part.getNumber())
                     .uploadId(uploadId)
                     .build();
 
                 UploadPartResponse partResponse = s3.uploadPart(partRequest, RequestBody.fromBytes(bytes));
 
-                CompletedPart completedPart = CompletedPart.builder()
+                return CompletedPart.builder()
                     .eTag(normalizeEtag(partResponse.eTag()))
                     .partNumber(part.getNumber())
                     .build();
-
-                completedParts.add(completedPart);
-            });
+            }).collect(Collectors.toList());
 
         Collections.sort(completedParts, new Comparator<CompletedPart>() {
 
@@ -294,6 +294,10 @@ public abstract class AbstractStoreTest {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
+    }
+
+    private String md5Hex(byte[] bytes) {
+        return DigestUtils.md5Hex(bytes);
     }
 
     private byte[] md5(byte[] bytes) {

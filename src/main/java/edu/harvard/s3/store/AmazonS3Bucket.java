@@ -216,8 +216,6 @@ public class AmazonS3Bucket implements ObjectStore {
 
         CreateMultipartUploadResponse createResponse = s3.createMultipartUpload(createRequest);
 
-        List<CompletedPart> completedParts = new ArrayList<>();
-
         String uploadId = createResponse.uploadId();
 
         List<ObjectPart> parts = new ArrayList<>();
@@ -228,8 +226,8 @@ public class AmazonS3Bucket implements ObjectStore {
             parts.add(new ObjectPart(++partNumber, position));
         }
 
-        parts.parallelStream()
-            .forEach(part -> {
+        List<CompletedPart> completedParts = parts.parallelStream()
+            .map(part -> {
                 String copySourceRange = copySourceRange(part.getPosition(), source.size());
 
                 UploadPartCopyRequest partRequest = UploadPartCopyRequest.builder()
@@ -246,13 +244,11 @@ public class AmazonS3Bucket implements ObjectStore {
 
                 CopyPartResult copyPartResult = partResponse.copyPartResult();
 
-                CompletedPart completedPart = CompletedPart.builder()
+                return CompletedPart.builder()
                     .eTag(normalizeEtag(copyPartResult.eTag()))
                     .partNumber(part.getNumber())
                     .build();
-
-                completedParts.add(completedPart);
-            });
+            }).collect(Collectors.toList());
 
         Collections.sort(completedParts, new Comparator<CompletedPart>() {
 
@@ -276,14 +272,15 @@ public class AmazonS3Bucket implements ObjectStore {
 
         CompleteMultipartUploadResponse completeResponse = s3.completeMultipartUpload(completeRequest);
 
-        String sourceEtag = normalizeEtag(source.eTag());
         String destinationEtag = normalizeEtag(completeResponse.eTag());
 
-        if (parseInt(destinationEtag.split("-")[1]) == partNumber) {
+        int etagPartCount = parseInt(destinationEtag.split("-")[1], 10);
+
+        if (etagPartCount == partNumber) {
             return 0;
         } else {
             log.warn("copy failure: destination etag {} did not match expected number of parts {}",
-                sourceEtag, partNumber);
+                destinationEtag, partNumber);
             return -1;
         }
     }

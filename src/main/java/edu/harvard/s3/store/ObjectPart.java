@@ -19,7 +19,7 @@ package edu.harvard.s3.store;
 import lombok.Data;
 
 /**
- * Object part for multipart upload.
+ * Object part POJO for multipart upload representing part number and its byte start position.
  */
 @Data
 public class ObjectPart {
