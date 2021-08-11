@@ -16,6 +16,7 @@
 
 package edu.harvard.s3.utility;
 
+import static java.lang.Boolean.parseBoolean;
 import static java.lang.Integer.parseInt;
 import static java.lang.Long.parseLong;
 import static java.util.Optional.ofNullable;
@@ -38,6 +39,7 @@ public final class EnvUtils {
     static final String AWS_MAX_KEYS = "AWS_MAX_KEYS";
     static final String AWS_MAX_PART_SIZE = "AWS_MAX_PART_SIZE";
     static final String AWS_MULTIPART_THRESHOLD = "AWS_MULTIPART_THRESHOLD";
+    static final String AWS_SKIP_MULTIPART = "AWS_SKIP_MULTIPART";
 
     private static final Map<String, String> DEFAULT_ENV = Map.of(
         PARALLELISM, "12",
@@ -47,7 +49,8 @@ public final class EnvUtils {
         AWS_BUCKET_NAME, "harvard-drs-delivery",
         AWS_MAX_KEYS, "5000",
         AWS_MAX_PART_SIZE, "52428800",
-        AWS_MULTIPART_THRESHOLD, "104857600"
+        AWS_MULTIPART_THRESHOLD, "104857600",
+        AWS_SKIP_MULTIPART, "false"
     );
 
     private EnvUtils() { }
@@ -122,6 +125,15 @@ public final class EnvUtils {
      */
     public static long getAwsMultipartThreshold() {
         return parseLong(get(AWS_MULTIPART_THRESHOLD));
+    }
+
+    /**
+     * Retrieve environment AWS skip multipart. (default false)
+     *
+     * @return AWS skip multipart
+     */
+    public static boolean getAwsSkipMultipart() {
+        return parseBoolean(get(AWS_SKIP_MULTIPART));
     }
 
     static String get(String key) {

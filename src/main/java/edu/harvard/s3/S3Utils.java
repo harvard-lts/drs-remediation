@@ -20,6 +20,7 @@ import static edu.harvard.s3.utility.EnvUtils.getAwsBucketName;
 import static edu.harvard.s3.utility.EnvUtils.getAwsMaxKeys;
 import static edu.harvard.s3.utility.EnvUtils.getAwsMaxPartSize;
 import static edu.harvard.s3.utility.EnvUtils.getAwsMultipartThreshold;
+import static edu.harvard.s3.utility.EnvUtils.getAwsSkipMultipart;
 import static edu.harvard.s3.utility.EnvUtils.getInputPath;
 import static edu.harvard.s3.utility.EnvUtils.getInputPattern;
 import static edu.harvard.s3.utility.EnvUtils.getInputSkip;
@@ -67,6 +68,7 @@ public final class S3Utils {
             getAwsMaxKeys(),
             getAwsMaxPartSize(),
             getAwsMultipartThreshold(),
+            getAwsSkipMultipart(),
             endpointOverride
         );
 
@@ -95,6 +97,7 @@ public final class S3Utils {
                 getAwsMaxKeys(),
                 getAwsMaxPartSize(),
                 getAwsMultipartThreshold(),
+                getAwsSkipMultipart(),
                 endpointOverride
             );
             processTaskQueue.submit(new AmazonS3RemediationTask(store, lookup, objects));

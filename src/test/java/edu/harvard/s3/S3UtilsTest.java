@@ -39,26 +39,26 @@ public class S3UtilsTest extends AbstractStoreTest {
         S3Utils.main(new String[] { inputPath, endpointOverride });
 
         // unfortunately no better way to wait until main is complete
-        Thread.sleep(2500);
+        Thread.sleep(60000);
 
         List<String> expectedRenamedKeys = Arrays.asList(new String[] {
-            // "12887296/v1/content/data/400171120.lfs",
+            "12887296/v1/content/data/400171120.lfs",
             "12887296/v1/content/data/400171120.png",
             "12887296/v1/content/descriptor/400171120_mets.xml",
             "12887296/v1/content/metadata/400171120_mods.xml",
-            // "12887299/v1/content/data/400171126.lfs",
+            "12887299/v1/content/data/400171126.lfs",
             "12887299/v1/content/data/400171126.png",
             "12887299/v1/content/descriptor/400171126_mets.xml",
             "12887299/v1/content/metadata/400171126_mods.xml",
-            // "12887301/v1/content/data/400171130.lfs",
+            "12887301/v1/content/data/400171130.lfs",
             "12887301/v1/content/data/400171130.png",
             "12887301/v1/content/descriptor/400171130_mets.xml",
             "12887301/v1/content/metadata/400171130_mods.xml",
-            // "12887302/v1/content/data/400171132.lfs",
+            "12887302/v1/content/data/400171132.lfs",
             "12887302/v1/content/data/400171132.png",
             "12887302/v1/content/descriptor/400171132_mets.xml",
             "12887302/v1/content/metadata/400171132_mods.xml",
-            // "12887305/v1/content/data/400171138.lfs",
+            "12887305/v1/content/data/400171138.lfs",
             "12887305/v1/content/data/400171138.png",
             "12887305/v1/content/descriptor/400171138_mets.xml",
             "12887305/v1/content/metadata/400171138_mods.xml"

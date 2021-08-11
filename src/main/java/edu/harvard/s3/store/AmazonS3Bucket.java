@@ -18,6 +18,7 @@ package edu.harvard.s3.store;
 
 import static edu.harvard.s3.utility.RuntimeUtils.totalMemory;
 import static edu.harvard.s3.utility.TimeUtils.elapsed;
+import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.removeEnd;
 import static org.apache.commons.lang3.StringUtils.removeStart;
@@ -68,6 +69,8 @@ public class AmazonS3Bucket implements ObjectStore {
 
     private final long multipartThreshold;
 
+    private final boolean skipMultipart;
+
     /**
      * Amazon S3 bucket object store constructor.
      *
@@ -75,6 +78,7 @@ public class AmazonS3Bucket implements ObjectStore {
      * @param maxKeys            max keys for listing objects
      * @param maxPartSize        max part size for multipart upload
      * @param multipartThreshold multipart threshold
+     * @param skipMultipart      whether to skip multipart
      * @param endpointOverride   AWS endpoint override
      */
     public AmazonS3Bucket(
@@ -82,6 +86,7 @@ public class AmazonS3Bucket implements ObjectStore {
         int maxKeys,
         long maxPartSize,
         long multipartThreshold,
+        boolean skipMultipart,
         String endpointOverride
     ) {
         S3ClientBuilder builder = S3Client.builder();
@@ -97,6 +102,7 @@ public class AmazonS3Bucket implements ObjectStore {
         this.maxKeys = maxKeys;
         this.maxPartSize = maxPartSize;
         this.multipartThreshold = multipartThreshold;
+        this.skipMultipart = skipMultipart;
     }
 
     @Override
@@ -136,19 +142,19 @@ public class AmazonS3Bucket implements ObjectStore {
     @Override
     public int rename(S3Object source, String destinationKey) {
         try {
-            String sourceEtag = normalizeEtag(source.eTag());
-            String destiationEtag = source.size() > multipartThreshold
-                ? multiPartCopy(source, destinationKey)
-                : copy(source, destinationKey);
-
-            if (!destiationEtag.equals(sourceEtag)) {
-                log.warn("copy failure: source etag {} does not match destination etag {}",
-                    sourceEtag, destiationEtag);
-                return -1;
+            int copyResult;
+            if (source.size() < multipartThreshold) {
+                copyResult = copy(source, destinationKey);
+            } else {
+                copyResult = skipMultipart ? 1 : multiPartCopy(source, destinationKey);
             }
 
-            log.debug("copy success: source object {} to destination object {}",
-                source.key(), destinationKey);
+            if (copyResult == 0) {
+                log.debug("copy success: source object {} to destination object {}",
+                    source.key(), destinationKey);
+            } else {
+                return copyResult;
+            }
         } catch (SdkClientException | S3Exception e) {
             log.error("Error while attempting to copy object", e);
             return -1;
@@ -178,7 +184,7 @@ public class AmazonS3Bucket implements ObjectStore {
         return this.s3.listObjectsV2Paginator(request);
     }
 
-    private String copy(S3Object source, String destinationKey) {
+    private int copy(S3Object source, String destinationKey) {
         CopyObjectRequest copyObjectRequest = CopyObjectRequest.builder()
             .sourceBucket(this.bucketName)
             .sourceKey(source.key())
@@ -190,19 +196,19 @@ public class AmazonS3Bucket implements ObjectStore {
 
         CopyObjectResult result = response.copyObjectResult();
 
-        return normalizeEtag(result.eTag());
+        String sourceEtag = normalizeEtag(source.eTag());
+        String destinationEtag = normalizeEtag(result.eTag());
+
+        if (sourceEtag.equals(destinationEtag)) {
+            return 0;
+        } else {
+            log.warn("copy failure: source etag {} does not match destination etag {}",
+                sourceEtag, destinationEtag);
+            return -1;
+        }
     }
 
-    private void delete(S3Object object) {
-        DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
-            .bucket(this.bucketName)
-            .key(object.key())
-            .build();
-
-        s3.deleteObject(deleteObjectRequest);
-    }
-
-    private String multiPartCopy(S3Object source, String destinationKey) {
+    private int multiPartCopy(S3Object source, String destinationKey) {
         CreateMultipartUploadRequest createRequest = CreateMultipartUploadRequest.builder()
             .bucket(this.bucketName)
             .key(destinationKey)
@@ -270,7 +276,25 @@ public class AmazonS3Bucket implements ObjectStore {
 
         CompleteMultipartUploadResponse completeResponse = s3.completeMultipartUpload(completeRequest);
 
-        return normalizeEtag(completeResponse.eTag());
+        String sourceEtag = normalizeEtag(source.eTag());
+        String destinationEtag = normalizeEtag(completeResponse.eTag());
+
+        if (parseInt(destinationEtag.split("-")[1]) == partNumber) {
+            return 0;
+        } else {
+            log.warn("copy failure: destination etag {} did not match expected number of parts {}",
+                sourceEtag, partNumber);
+            return -1;
+        }
+    }
+
+    private void delete(S3Object object) {
+        DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+            .bucket(this.bucketName)
+            .key(object.key())
+            .build();
+
+        s3.deleteObject(deleteObjectRequest);
     }
 
     private String copySourceRange(long start, long size) {

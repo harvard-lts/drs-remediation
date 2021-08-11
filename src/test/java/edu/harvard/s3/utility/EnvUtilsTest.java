@@ -75,4 +75,9 @@ public class EnvUtilsTest {
         assertEquals(104857600L, EnvUtils.getAwsMultipartThreshold());
     }
 
+    @Test
+    public void testGetAwsSkipMultipart() {
+        assertEquals(false, EnvUtils.getAwsSkipMultipart());
+    }
+
 }
