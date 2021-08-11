@@ -39,7 +39,7 @@ public class S3UtilsTest extends AbstractStoreTest {
         S3Utils.main(new String[] { inputPath, endpointOverride });
 
         // unfortunately no better way to wait until main is complete
-        Thread.sleep(75000);
+        Thread.sleep(90000);
 
         List<String> expectedRenamedKeys = Arrays.asList(new String[] {
             "12887296/v1/content/data/400171120.lfs",
