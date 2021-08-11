@@ -18,6 +18,9 @@ package edu.harvard.s3.store;
 
 import static edu.harvard.s3.utility.EnvUtils.getAwsBucketName;
 import static edu.harvard.s3.utility.EnvUtils.getAwsMaxKeys;
+import static edu.harvard.s3.utility.EnvUtils.getAwsMaxPartSize;
+import static edu.harvard.s3.utility.EnvUtils.getAwsMultipartThreshold;
+import static edu.harvard.s3.utility.EnvUtils.getAwsSkipMultipart;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -39,36 +42,64 @@ public class AmazonS3BucketTest extends AbstractStoreTest {
     @Test
     public void testMalformedUri() {
         assertThrows(RuntimeException.class, () -> {
-            new AmazonS3Bucket(getAwsBucketName(), getAwsMaxKeys(), "xp:\\fubar/|*/%~?foo-bar=test?/2021");
+            new AmazonS3Bucket(
+                getAwsBucketName(),
+                getAwsMaxKeys(),
+                getAwsMaxPartSize(),
+                getAwsMultipartThreshold(),
+                getAwsSkipMultipart(),
+                "xp:\\fubar/|*/%~?foo-bar=test?/2021"
+            );
         });
     }
 
     @Test
     public void testCount() {
-        AmazonS3Bucket store = new AmazonS3Bucket(getAwsBucketName(), getAwsMaxKeys(), endpointOverride);
+        AmazonS3Bucket store = new AmazonS3Bucket(
+            getAwsBucketName(),
+            getAwsMaxKeys(),
+            getAwsMaxPartSize(),
+            getAwsMultipartThreshold(),
+            getAwsSkipMultipart(),
+            endpointOverride
+        );
 
         int count = store.count();
 
-        assertEquals(15, count);
+        assertEquals(20, count);
 
         store.close();
     }
 
     @Test
     public void testPartition() {
-        AmazonS3Bucket store = new AmazonS3Bucket(getAwsBucketName(), getAwsMaxKeys(), endpointOverride);
+        AmazonS3Bucket store = new AmazonS3Bucket(
+            getAwsBucketName(),
+            getAwsMaxKeys(),
+            getAwsMaxPartSize(),
+            getAwsMultipartThreshold(),
+            getAwsSkipMultipart(),
+            endpointOverride
+        );
 
         List<List<S3Object>> paritions = store.partition();
 
         assertEquals(1, paritions.size());
-        assertEquals(15, paritions.get(0).size());
+        assertEquals(20, paritions.get(0).size());
 
         store.close();
     }
 
     @Test
     public void testRename(final S3Client s3) {
-        AmazonS3Bucket store = new AmazonS3Bucket(getAwsBucketName(), getAwsMaxKeys(), endpointOverride);
+        AmazonS3Bucket store = new AmazonS3Bucket(
+            getAwsBucketName(),
+            getAwsMaxKeys(),
+            getAwsMaxPartSize(),
+            getAwsMultipartThreshold(),
+            getAwsSkipMultipart(),
+            endpointOverride
+        );
 
         List<List<S3Object>> paritions = store.partition();
 
@@ -110,7 +141,14 @@ public class AmazonS3BucketTest extends AbstractStoreTest {
 
     @Test
     public void testRenameSkipLargeObject(final S3Client s3) {
-        AmazonS3Bucket store = new AmazonS3Bucket(getAwsBucketName(), getAwsMaxKeys(), endpointOverride);
+        AmazonS3Bucket store = new AmazonS3Bucket(
+            getAwsBucketName(),
+            getAwsMaxKeys(),
+            getAwsMaxPartSize(),
+            getAwsMultipartThreshold(),
+            true,
+            endpointOverride
+        );
 
         S3Object object = S3Object.builder()
             .size(5368709121L)
@@ -121,5 +159,6 @@ public class AmazonS3BucketTest extends AbstractStoreTest {
 
         assertEquals(1, result);
     }
+
 
 }

@@ -16,7 +16,9 @@
 
 package edu.harvard.s3.utility;
 
+import static java.lang.Boolean.parseBoolean;
 import static java.lang.Integer.parseInt;
+import static java.lang.Long.parseLong;
 import static java.util.Optional.ofNullable;
 
 import java.util.Map;
@@ -35,6 +37,9 @@ public final class EnvUtils {
 
     static final String AWS_BUCKET_NAME = "AWS_BUCKET_NAME";
     static final String AWS_MAX_KEYS = "AWS_MAX_KEYS";
+    static final String AWS_MAX_PART_SIZE = "AWS_MAX_PART_SIZE";
+    static final String AWS_MULTIPART_THRESHOLD = "AWS_MULTIPART_THRESHOLD";
+    static final String AWS_SKIP_MULTIPART = "AWS_SKIP_MULTIPART";
 
     private static final Map<String, String> DEFAULT_ENV = Map.of(
         PARALLELISM, "12",
@@ -42,7 +47,10 @@ public final class EnvUtils {
         INPUT_PATTERN, "^\\d+ : (\\d+) .*:(\\d+)$",
         INPUT_SKIP, "2",
         AWS_BUCKET_NAME, "harvard-drs-delivery",
-        AWS_MAX_KEYS, "5000"
+        AWS_MAX_KEYS, "5000",
+        AWS_MAX_PART_SIZE, "52428800",
+        AWS_MULTIPART_THRESHOLD, "104857600",
+        AWS_SKIP_MULTIPART, "false"
     );
 
     private EnvUtils() { }
@@ -99,6 +107,33 @@ public final class EnvUtils {
      */
     public static int getAwsMaxKeys() {
         return parseInt(get(AWS_MAX_KEYS));
+    }
+
+    /**
+     * Retrieve environment AWS max part size. (default 52428800 = 50 MiB)
+     *
+     * @return AWS max part size
+     */
+    public static long getAwsMaxPartSize() {
+        return parseLong(get(AWS_MAX_PART_SIZE));
+    }
+
+    /**
+     * Retrieve environment AWS multipart threshold. (default 104857600 = 100 MiB)
+     *
+     * @return AWS multipart threshold
+     */
+    public static long getAwsMultipartThreshold() {
+        return parseLong(get(AWS_MULTIPART_THRESHOLD));
+    }
+
+    /**
+     * Retrieve environment AWS skip multipart. (default false)
+     *
+     * @return AWS skip multipart
+     */
+    public static boolean getAwsSkipMultipart() {
+        return parseBoolean(get(AWS_SKIP_MULTIPART));
     }
 
     static String get(String key) {

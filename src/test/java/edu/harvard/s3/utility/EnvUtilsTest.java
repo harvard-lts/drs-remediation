@@ -65,4 +65,19 @@ public class EnvUtilsTest {
         assertEquals(5000, EnvUtils.getAwsMaxKeys());
     }
 
+    @Test
+    public void testGetAwsMaxPartSize() {
+        assertEquals(52428800L, EnvUtils.getAwsMaxPartSize());
+    }
+
+    @Test
+    public void testGetAwsMultipartThreshold() {
+        assertEquals(104857600L, EnvUtils.getAwsMultipartThreshold());
+    }
+
+    @Test
+    public void testGetAwsSkipMultipart() {
+        assertEquals(false, EnvUtils.getAwsSkipMultipart());
+    }
+
 }
