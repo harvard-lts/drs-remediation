@@ -250,14 +250,7 @@ public class AmazonS3Bucket implements ObjectStore {
                     .build();
             }).collect(Collectors.toList());
 
-        Collections.sort(completedParts, new Comparator<CompletedPart>() {
-
-            @Override
-            public int compare(CompletedPart cp1, CompletedPart cp2) {
-                return cp1.partNumber().compareTo(cp2.partNumber());
-            }
-
-        });
+        Collections.sort(completedParts, new CompletedPartComparator());
 
         CompletedMultipartUpload completedMultipartUpload = CompletedMultipartUpload.builder()
             .parts(completedParts)

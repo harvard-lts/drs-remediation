@@ -21,6 +21,9 @@ import static edu.harvard.s3.utility.EnvUtils.getAwsMaxPartSize;
 import static edu.harvard.s3.utility.EnvUtils.getInputPattern;
 import static edu.harvard.s3.utility.EnvUtils.getInputSkip;
 import static java.lang.String.format;
+import static java.nio.file.StandardOpenOption.CREATE_NEW;
+import static java.nio.file.StandardOpenOption.SPARSE;
+import static java.nio.file.StandardOpenOption.WRITE;
 import static org.apache.commons.lang3.StringUtils.removeEnd;
 import static org.apache.commons.lang3.StringUtils.removeStart;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -35,6 +38,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.channels.SeekableByteChannel;
+import java.nio.file.Files;
+import java.nio.file.OpenOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -111,13 +120,16 @@ public abstract class AbstractStoreTest {
             putObject(s3, mods, format("0%1$s/v1/content/metadata/%1$s_mods.xml", id));
             putObject(s3, png, format("0%1$s/v1/content/data/%1$s.png", id));
 
-            String filename = format("target/%1$s.lfs", id);
+            String filePath = format("target/%1$s.lfs", id);
             long sizeInBytes = random(104857600L, 262144000L);
 
-            File lfs = createLargeFile(filename, sizeInBytes);
-            lfs.deleteOnExit();
+            File lfs = createLargeFile(filePath, sizeInBytes);
 
             multipartUpload(s3, lfs, format("0%1$s/v1/content/data/%1$s.lfs", id));
+
+            lfs.delete();
+
+            assertFalse(lfs.exists());
         }
 
         s3.close();
@@ -194,15 +206,11 @@ public abstract class AbstractStoreTest {
                 long length = Math.min(getAwsMaxPartSize(), file.length() - part.getPosition());
                 byte[] bytes = readByteRange(file.getAbsolutePath(), part.getPosition(), (int) length);
 
-                String contentMd5 = md5Hex(bytes);
-
                 md5Parts.add(new Md5Part(part.getNumber(), md5(bytes)));
 
                 UploadPartRequest partRequest = UploadPartRequest.builder()
                     .bucket(getAwsBucketName())
                     .key(key)
-                    .contentLength(length)
-                    .contentMD5(contentMd5)
                     .partNumber(part.getNumber())
                     .uploadId(uploadId)
                     .build();
@@ -215,36 +223,22 @@ public abstract class AbstractStoreTest {
                     .build();
             }).collect(Collectors.toList());
 
-        Collections.sort(completedParts, new Comparator<CompletedPart>() {
+        Collections.sort(completedParts, new CompletedPartComparator());
 
-            @Override
-            public int compare(CompletedPart cp1, CompletedPart cp2) {
-                return cp1.partNumber().compareTo(cp2.partNumber());
-            }
+        Collections.sort(md5Parts, new Md5PartComparator());
 
-        });
-
-        Collections.sort(md5Parts, new Comparator<Md5Part>() {
-
-            @Override
-            public int compare(Md5Part p1, Md5Part p2) {
-                return p1.getNumber().compareTo(p2.getNumber());
-            }
-
-        });
-
-        final CompletedMultipartUpload completedMultipartUpload = CompletedMultipartUpload.builder()
+        CompletedMultipartUpload completedMultipartUpload = CompletedMultipartUpload.builder()
             .parts(completedParts)
             .build();
 
-        final CompleteMultipartUploadRequest completeRequest = CompleteMultipartUploadRequest.builder()
+        CompleteMultipartUploadRequest completeRequest = CompleteMultipartUploadRequest.builder()
             .bucket(getAwsBucketName())
             .key(key)
             .uploadId(uploadId)
             .multipartUpload(completedMultipartUpload)
             .build();
 
-        final CompleteMultipartUploadResponse completeResponse = s3.completeMultipartUpload(completeRequest);
+        CompleteMultipartUploadResponse completeResponse = s3.completeMultipartUpload(completeRequest);
 
         byte[] allMd5s = new byte[0];
 
@@ -252,26 +246,27 @@ public abstract class AbstractStoreTest {
             allMd5s = ArrayUtils.addAll(allMd5s, md5Part.md5);
         }
 
-        final String etag = format("%s-%d", DigestUtils.md5Hex(allMd5s), parts.size());
+        String etag = format("%s-%d", DigestUtils.md5Hex(allMd5s), parts.size());
 
         assertEquals(etag, normalizeEtag(completeResponse.eTag()));
     }
 
-    private File createLargeFile(final String filename, final long sizeInBytes) {
-        try {
-            File file = new File(filename);
-            file.createNewFile();
+    private File createLargeFile(String filePath, long sizeInBytes) {
+        ByteBuffer buf = ByteBuffer.allocate(4).putInt(2);
+        buf.rewind();
 
-            try (RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw")) {
-                randomAccessFile.setLength(sizeInBytes);
-                randomAccessFile.close();
+        OpenOption[] options = { WRITE, CREATE_NEW, SPARSE };
+        Path path = Paths.get(filePath);
 
-                return file;
-            }
+        try (SeekableByteChannel channel = Files.newByteChannel(path, options)) {
+            channel.position(sizeInBytes);
+            channel.write(buf);
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
+
+        return path.toFile();
     }
 
     private byte[] readByteRange(String filePath, long start, int length) {
@@ -296,10 +291,6 @@ public abstract class AbstractStoreTest {
         }
     }
 
-    private String md5Hex(byte[] bytes) {
-        return DigestUtils.md5Hex(bytes);
-    }
-
     private byte[] md5(byte[] bytes) {
         return DigestUtils.md5(bytes);
     }
@@ -316,6 +307,15 @@ public abstract class AbstractStoreTest {
     private class Md5Part {
         private final Integer number;
         private final byte[] md5;
+    }
+
+    private class Md5PartComparator implements Comparator<Md5Part> {
+
+        @Override
+        public int compare(Md5Part mp1, Md5Part mp2) {
+            return mp1.getNumber().compareTo(mp2.getNumber());
+        }
+
     }
 
 }
