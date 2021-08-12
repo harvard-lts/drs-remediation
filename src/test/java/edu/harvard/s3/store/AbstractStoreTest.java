@@ -193,20 +193,16 @@ public abstract class AbstractStoreTest {
 
         List<ObjectPart> parts = new ArrayList<>();
 
-        List<Md5Part> md5Parts = new ArrayList<>();
-
         int partNumber = 0;
 
         for (long position = 0; position < file.length(); position += getAwsMaxPartSize()) {
             parts.add(new ObjectPart(++partNumber, position));
         }
 
-        List<CompletedPart> completedParts = parts.parallelStream()
+        List<CompletedMd5Part> completedMd5Parts = parts.parallelStream()
             .map(part -> {
                 long length = Math.min(getAwsMaxPartSize(), file.length() - part.getPosition());
                 byte[] bytes = readByteRange(file.getAbsolutePath(), part.getPosition(), (int) length);
-
-                md5Parts.add(new Md5Part(part.getNumber(), md5(bytes)));
 
                 UploadPartRequest partRequest = UploadPartRequest.builder()
                     .bucket(getAwsBucketName())
@@ -217,15 +213,20 @@ public abstract class AbstractStoreTest {
 
                 UploadPartResponse partResponse = s3.uploadPart(partRequest, RequestBody.fromBytes(bytes));
 
-                return CompletedPart.builder()
+                CompletedPart completedPart = CompletedPart.builder()
                     .eTag(normalizeEtag(partResponse.eTag()))
                     .partNumber(part.getNumber())
                     .build();
+
+                return new CompletedMd5Part(completedPart, part.getNumber(), md5(bytes));
+                
             }).collect(Collectors.toList());
 
-        Collections.sort(completedParts, new CompletedPartComparator());
+        Collections.sort(completedMd5Parts, new CompletedMd5PartComparator());
 
-        Collections.sort(md5Parts, new Md5PartComparator());
+        List<CompletedPart> completedParts = completedMd5Parts.stream()
+            .map(cmp -> cmp.getCompleted())
+            .collect(Collectors.toList());
 
         CompletedMultipartUpload completedMultipartUpload = CompletedMultipartUpload.builder()
             .parts(completedParts)
@@ -242,8 +243,8 @@ public abstract class AbstractStoreTest {
 
         byte[] allMd5s = new byte[0];
 
-        for (Md5Part md5Part : md5Parts) {
-            allMd5s = ArrayUtils.addAll(allMd5s, md5Part.md5);
+        for (CompletedMd5Part md5Part : completedMd5Parts) {
+            allMd5s = ArrayUtils.addAll(allMd5s, md5Part.getMd5());
         }
 
         String etag = format("%s-%d", DigestUtils.md5Hex(allMd5s), parts.size());
@@ -252,7 +253,8 @@ public abstract class AbstractStoreTest {
     }
 
     private File createLargeFile(String filePath, long sizeInBytes) {
-        ByteBuffer buf = ByteBuffer.allocate(4).putInt(2);
+        ByteBuffer buf = ByteBuffer.allocate(4)
+            .putInt(2);
         buf.rewind();
 
         OpenOption[] options = { WRITE, CREATE_NEW, SPARSE };
@@ -304,16 +306,17 @@ public abstract class AbstractStoreTest {
     }
 
     @Data
-    private class Md5Part {
+    private class CompletedMd5Part {
+        private final CompletedPart completed;
         private final Integer number;
         private final byte[] md5;
     }
 
-    private class Md5PartComparator implements Comparator<Md5Part> {
+    private class CompletedMd5PartComparator implements Comparator<CompletedMd5Part> {
 
         @Override
-        public int compare(Md5Part mp1, Md5Part mp2) {
-            return mp1.getNumber().compareTo(mp2.getNumber());
+        public int compare(CompletedMd5Part cmp1, CompletedMd5Part cmp2) {
+            return cmp1.getNumber().compareTo(cmp2.getNumber());
         }
 
     }
