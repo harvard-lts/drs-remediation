@@ -40,7 +40,11 @@ public interface ObjectStore {
 
     /**
      * Rename object source key with destination key.
-     * Return status code: 0 = success, 1 = skipped, -1 = failure
+     * Return status code:
+     *   0 = success
+     *   1 = skipped
+     *  -1 = s3 client/server error
+     *  -2 = copy incorrect etag
      *
      * @param source         source object to rename
      * @param destinationKey desired name of source object

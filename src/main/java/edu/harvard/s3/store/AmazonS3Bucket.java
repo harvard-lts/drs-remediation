@@ -156,6 +156,9 @@ public class AmazonS3Bucket implements ObjectStore {
             }
         } catch (SdkClientException | S3Exception e) {
             log.error("Error while attempting to copy object", e);
+            if (log.isDebugEnabled()) {
+                e.printStackTrace();
+            }
             return -1;
         }
 
@@ -163,6 +166,9 @@ public class AmazonS3Bucket implements ObjectStore {
             delete(source);
         } catch (SdkClientException | S3Exception e) {
             log.error("Error while attempting to delete object", e);
+            if (log.isDebugEnabled()) {
+                e.printStackTrace();
+            }
             return -1;
         }
 
@@ -203,7 +209,7 @@ public class AmazonS3Bucket implements ObjectStore {
         } else {
             log.warn("copy failure: source etag {} does not match destination etag {}",
                 sourceEtag, destinationEtag);
-            return -1;
+            return -2;
         }
     }
 
@@ -273,7 +279,7 @@ public class AmazonS3Bucket implements ObjectStore {
         } else {
             log.warn("copy failure: destination etag {} did not match expected number of parts {}",
                 destinationEtag, partNumber);
-            return -1;
+            return -2;
         }
     }
 
