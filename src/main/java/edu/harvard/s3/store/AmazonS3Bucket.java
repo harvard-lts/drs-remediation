@@ -142,7 +142,7 @@ public class AmazonS3Bucket implements ObjectStore {
     public int rename(S3Object source, String destinationKey) {
         try {
             int copyResult;
-            if (source.size() < multipartThreshold) {
+            if (source.size() < multipartThreshold && !source.eTag().contains("-")) {
                 copyResult = copy(source, destinationKey);
             } else {
                 copyResult = skipMultipart ? 1 : multiPartCopy(source, destinationKey);
