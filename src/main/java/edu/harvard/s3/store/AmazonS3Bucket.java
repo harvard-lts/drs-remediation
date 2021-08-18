@@ -207,7 +207,7 @@ public class AmazonS3Bucket implements ObjectStore {
         if (sourceEtag.equals(destinationEtag)) {
             return 0;
         } else {
-            log.warn("copy failure: source etag {} does not match destination etag {}",
+            log.error("copy failure: source etag {} does not match destination etag {}",
                 sourceEtag, destinationEtag);
             return -2;
         }
@@ -277,7 +277,7 @@ public class AmazonS3Bucket implements ObjectStore {
         if (etagPartCount == partNumber) {
             return 0;
         } else {
-            log.warn("copy failure: destination etag {} did not match expected number of parts {}",
+            log.error("copy failure: destination etag {} did not match expected number of parts {}",
                 destinationEtag, partNumber);
             return -2;
         }
