@@ -171,14 +171,14 @@ public abstract class AbstractStoreTest {
     }
 
     private void putObject(final S3Client s3, File file, String key) {
-        PutObjectRequest metsObjectRequest = PutObjectRequest.builder()
+        PutObjectRequest request = PutObjectRequest.builder()
             .bucket(getAwsBucketName())
             .key(key)
             .build();
 
-        PutObjectResponse metsObjectResponse = s3.putObject(metsObjectRequest, RequestBody.fromFile(file));
+        PutObjectResponse response = s3.putObject(request, RequestBody.fromFile(file));
 
-        assertEquals(md5Hex(file), normalizeEtag(metsObjectResponse.eTag()));
+        assertEquals(md5Hex(file), normalizeEtag(response.eTag()));
     }
 
     private void multipartUpload(final S3Client s3, File file, String key) {
