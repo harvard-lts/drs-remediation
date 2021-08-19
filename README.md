@@ -63,7 +63,7 @@ docker build --no-cache -t s3utils .
 
 Run
 ```
-docker run -v /c/Users/wwelling/Development/harvard/utils/external:/external --env-file=.env s3utils
+docker run -v /c/Users/wwelling/Development/harvard/s3utils/external:/external --env-file=.env s3utils
 ```
 
 ## Docker Compose
