@@ -62,6 +62,8 @@ public final class S3Utils {
         log.info("{} AWS multipart threshold", getAwsMultipartThreshold());
         log.info("{} AWS skip multipart", getAwsSkipMultipart());
 
+        log.info("{} parallelism", getParallelism());
+
         final String inputPath = args.length > 0 ? args[0] : getInputPath();
 
         final String endpointOverride = args.length > 1 ? args[1] : null;
