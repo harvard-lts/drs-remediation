@@ -62,7 +62,7 @@ public class EnvUtilsTest {
 
     @Test
     public void testGetAwsMaxKeys() {
-        assertEquals(5000, EnvUtils.getAwsMaxKeys());
+        assertEquals(1000, EnvUtils.getAwsMaxKeys());
     }
 
     @Test

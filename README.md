@@ -11,7 +11,7 @@
 | INPUT_SKIP              | number of lines of input file to skip      | 2                          |
 | PARALLELISM             | number of concurrent tasks                 | 12                         |
 | AWS_BUCKET_NAME         | AWS S3 bucket name                         | harvard-drs-delivery       |
-| AWS_MAX_KEYS            | AWS S3 list max keys                       | 5000                       |
+| AWS_MAX_KEYS            | AWS S3 list max keys                       | 1000                       |
 | AWS_MAX_PART_SIZE       | AWS S3 max part size                       | 52428800 (50 MiB)          |
 | AWS_MULTIPART_THRESHOLD | AWS S3 multipart threashold                | 104857600 (100 MiB)        |
 | AWS_SKIP_MULTIPART      | AWS S3 skip if multipart threshold reached | false                      |
