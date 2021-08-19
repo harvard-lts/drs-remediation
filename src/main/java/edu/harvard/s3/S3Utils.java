@@ -56,6 +56,12 @@ public final class S3Utils {
         log.debug("{} available processors", availableProcessors());
         log.debug("{} GiB total memory used by JVM", totalMemory());
 
+        log.info("{} AWS bucket", getAwsBucketName());
+        log.info("{} AWS max keys", getAwsMaxKeys());
+        log.info("{} AWS max part size", getAwsMaxPartSize());
+        log.info("{} AWS multipart threshold", getAwsMultipartThreshold());
+        log.info("{} AWS skip multipart", getAwsSkipMultipart());
+
         final String inputPath = args.length > 0 ? args[0] : getInputPath();
 
         final String endpointOverride = args.length > 1 ? args[1] : null;
