@@ -24,7 +24,6 @@ import static org.apache.commons.lang3.StringUtils.removeEnd;
 import static org.apache.commons.lang3.StringUtils.removeStart;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -90,11 +89,7 @@ public class AmazonS3Bucket implements ObjectStore {
     ) {
         S3ClientBuilder builder = S3Client.builder();
         if (Objects.nonNull(endpointOverride)) {
-            try {
-                builder = builder.endpointOverride(new URI(endpointOverride));
-            } catch (URISyntaxException e) {
-                throw new RuntimeException("Unable to build endpoint override URI", e);
-            }
+            builder = builder.endpointOverride(URI.create(endpointOverride));
         }
         this.s3 = builder.build();
         this.bucketName = bucketName;

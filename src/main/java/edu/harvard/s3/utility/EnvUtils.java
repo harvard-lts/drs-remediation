@@ -47,7 +47,7 @@ public final class EnvUtils {
         INPUT_PATTERN, "^\\d+ : (\\d+) .*:(\\d+)$",
         INPUT_SKIP, "2",
         AWS_BUCKET_NAME, "harvard-drs-delivery",
-        AWS_MAX_KEYS, "5000",
+        AWS_MAX_KEYS, "1000",
         AWS_MAX_PART_SIZE, "52428800",
         AWS_MULTIPART_THRESHOLD, "104857600",
         AWS_SKIP_MULTIPART, "false"
@@ -101,7 +101,7 @@ public final class EnvUtils {
     }
 
     /**
-     * Retrieve environment AWS max keys. (default 5000)
+     * Retrieve environment AWS max keys. (default 1000)
      *
      * @return AWS max keys
      */
