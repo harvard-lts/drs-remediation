@@ -108,7 +108,10 @@ public class AmazonS3RemediationTask implements ProcessTask {
      */
     String mapKey(String key) {
         // parse root "folder" from object key
-        String iid = key.substring(0, key.indexOf(PATH_SEPARATOR));
+        String iid = key.contains(PATH_SEPARATOR)
+            ? key.substring(0, key.indexOf(PATH_SEPARATOR))
+            : key;
+
         String id = iid;
 
         // remove leading zeroes
