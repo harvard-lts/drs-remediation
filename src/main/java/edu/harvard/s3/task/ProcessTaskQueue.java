@@ -66,7 +66,7 @@ public class ProcessTaskQueue {
             inProcess.add(task);
             start(task);
         } else {
-            log.info("task queued in wait at position {}", inWait.size());
+            log.info("task {} queued in wait at position {}", task.id(), inWait.size());
             inWait.add(task);
         }
     }
