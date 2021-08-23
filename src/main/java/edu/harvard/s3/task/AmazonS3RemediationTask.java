@@ -22,6 +22,7 @@ import static java.util.Objects.nonNull;
 import edu.harvard.s3.lookup.LookupTable;
 import edu.harvard.s3.store.ObjectStore;
 import java.util.List;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +47,8 @@ public class AmazonS3RemediationTask implements ProcessTask {
 
     private final List<S3Object> objects;
 
+    private final String id;
+
     /**
      * Amazon S3 remediation task constructor.
      *
@@ -61,6 +64,7 @@ public class AmazonS3RemediationTask implements ProcessTask {
         this.s3 = s3;
         this.lookup = lookup;
         this.objects = objects;
+        this.id = UUID.randomUUID().toString();
     }
 
     @Override
@@ -73,6 +77,11 @@ public class AmazonS3RemediationTask implements ProcessTask {
     @Override
     public void complete() {
         this.s3.close();
+    }
+
+    @Override
+    public String id() {
+        return id;
     }
 
     /**

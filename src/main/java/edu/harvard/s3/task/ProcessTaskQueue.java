@@ -23,10 +23,12 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Process task queue to execute queue of tasks with provided parallelism.
  */
+@Slf4j
 public class ProcessTaskQueue {
 
     private final long parallelism;
@@ -59,10 +61,12 @@ public class ProcessTaskQueue {
      * @param task process task to be queued
      */
     public synchronized void submit(ProcessTask task) {
+        log.info("submitting task {}", task.id());
         if (inProcess.size() < this.parallelism) {
             inProcess.add(task);
             start(task);
         } else {
+            log.info("task queued in wait at position {}", inWait.size());
             inWait.add(task);
         }
     }
@@ -73,13 +77,16 @@ public class ProcessTaskQueue {
     }
 
     private synchronized void complete(ProcessTask task) {
+        log.info("task {} complete", task.id());
         task.complete();
         inProcess.remove(task);
         ProcessTask nextTask = inWait.poll();
         if (Objects.nonNull(nextTask)) {
+            log.info("task {} dequeued; {} remaining in wait", task.id(), inWait.size());
             inProcess.add(nextTask);
             start(nextTask);
         } else {
+            log.info("in wait queue is empty; {} in process", inProcess.size());
             if (inProcess.isEmpty()) {
                 try {
                     shutdown();
@@ -91,6 +98,7 @@ public class ProcessTaskQueue {
     }
 
     private void shutdown() throws InterruptedException {
+        log.info("shutting down process task queue");
         executor.shutdown();
         this.callback.complete();
     }
