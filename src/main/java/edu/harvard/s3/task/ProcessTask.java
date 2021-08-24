@@ -33,4 +33,9 @@ public interface ProcessTask {
      */
     void complete();
 
+    /**
+     * Identifier for the task.
+     */
+    String id();
+
 }
