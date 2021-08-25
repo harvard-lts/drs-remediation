@@ -52,7 +52,7 @@ public class ProcessTaskQueue {
         this.callback = callback;
         this.executor = newFixedThreadPool(parallelism);
         this.inProcess = new ArrayBlockingQueue<>(parallelism);
-        this.inWait = new ArrayBlockingQueue<>(512);
+        this.inWait = new ArrayBlockingQueue<>(98304);
     }
 
     /**
