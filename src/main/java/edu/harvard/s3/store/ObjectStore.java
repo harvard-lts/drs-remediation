@@ -17,6 +17,7 @@
 package edu.harvard.s3.store;
 
 import java.util.List;
+import java.util.stream.Stream;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
 /**
@@ -34,9 +35,9 @@ public interface ObjectStore {
     /**
      * Partition the object store.
      *
-     * @return list of object partitions
+     * @return stream of object partitions
      */
-    List<List<S3Object>> partition();
+    Stream<List<S3Object>> partition();
 
     /**
      * Rename object source key with destination key.

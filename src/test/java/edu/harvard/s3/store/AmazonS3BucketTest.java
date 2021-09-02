@@ -82,7 +82,8 @@ public class AmazonS3BucketTest extends AbstractStoreTest {
             endpointOverride
         );
 
-        List<List<S3Object>> paritions = store.partition();
+        List<List<S3Object>> paritions = store.partition()
+            .collect(Collectors.toList());
 
         assertEquals(1, paritions.size());
         assertEquals(20, paritions.get(0).size());
@@ -101,7 +102,8 @@ public class AmazonS3BucketTest extends AbstractStoreTest {
             endpointOverride
         );
 
-        List<List<S3Object>> paritions = store.partition();
+        List<List<S3Object>> paritions = store.partition()
+            .collect(Collectors.toList());
 
         List<S3Object> originalObjects = paritions.get(0);
 

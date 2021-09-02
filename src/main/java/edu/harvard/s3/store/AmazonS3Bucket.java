@@ -16,8 +16,6 @@
 
 package edu.harvard.s3.store;
 
-import static edu.harvard.s3.utility.RuntimeUtils.totalMemory;
-import static edu.harvard.s3.utility.TimeUtils.elapsed;
 import static java.lang.Integer.parseInt;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.removeEnd;
@@ -29,6 +27,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -109,28 +108,11 @@ public class AmazonS3Bucket implements ObjectStore {
     }
 
     @Override
-    public List<List<S3Object>> partition() {
-        log.info("paritioning objects in bucket {}", bucketName);
-        long startTime = System.nanoTime();
+    public Stream<List<S3Object>> partition() {
+        log.info("streaming object paritions in bucket {}", bucketName);
 
-        ListObjectsV2Iterable iterable = list();
-
-        List<List<S3Object>> partitions = iterable.stream()
-            .map(r -> r.contents())
-            .collect(Collectors.toList());
-
-        log.info("{} partitions for bucket {}", partitions.size(), bucketName);
-
-        int count = partitions.stream()
-            .map(p -> p.size())
-            .mapToInt(Integer::valueOf)
-            .sum();
-
-        log.info("{} objects in bucket {}", count, bucketName);
-        log.debug("{} milliseconds to partition objects", elapsed(startTime));
-        log.debug("{} GiB total memory used after partitions", totalMemory());
-
-        return partitions;
+        return list().stream()
+            .map(r -> r.contents());
     }
 
     @Override
