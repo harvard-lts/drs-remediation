@@ -60,7 +60,7 @@ public class ProcessTaskQueue {
      *
      * @param task process task to be queued
      */
-    public synchronized void submit(ProcessTask task) {
+    public void submit(ProcessTask task) {
         log.info("submitting task {}", task.id());
         if (inProcess.size() < this.parallelism) {
             inProcess.add(task);
