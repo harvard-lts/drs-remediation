@@ -37,7 +37,7 @@ public class ProcessTaskQueueTest extends AbstractTaskTest {
 
         this.remediationTasks.forEach(task -> processTaskQueue.submit(task));
 
-        verify(callback, timeout(205).times(1))
+        verify(callback, timeout(7505).times(1))
             .complete();
 
         for (int i = 0; i < ids.length; ++i) {

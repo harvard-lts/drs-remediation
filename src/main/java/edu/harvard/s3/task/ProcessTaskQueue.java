@@ -23,6 +23,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -73,14 +74,20 @@ public class ProcessTaskQueue {
 
     private void start(ProcessTask task) {
         CompletableFuture.supplyAsync(() -> task.execute(), executor)
-            .thenAccept(this::complete);
+            .thenAccept(t -> {
+                try {
+                    complete(t);
+                } catch (InterruptedException e) {
+                    log.error("failed to complete task", e);
+                }
+            });
     }
 
-    private synchronized void complete(ProcessTask task) {
+    private synchronized void complete(ProcessTask task) throws InterruptedException {
         log.info("task {} complete", task.id());
         task.complete();
         inProcess.remove(task);
-        ProcessTask nextTask = inWait.poll();
+        ProcessTask nextTask = inWait.poll(5, TimeUnit.SECONDS);
         if (Objects.nonNull(nextTask)) {
             log.info("task {} dequeued; {} remaining in wait", task.id(), inWait.size());
             inProcess.add(nextTask);
