@@ -88,7 +88,6 @@ public final class S3Utils {
             public void complete() {
                 log.info("remediation of S3 bucket {} completed in {} milliseconds",
                     getAwsBucketName(), elapsed(startTime));
-                log.info("{} objects in bucket {} after remediation", s3.count(), getAwsBucketName());
                 lookup.unload();
                 s3.close();
             }
