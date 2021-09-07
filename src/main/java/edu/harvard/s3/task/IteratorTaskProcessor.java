@@ -21,6 +21,7 @@ import static java.util.concurrent.Executors.newFixedThreadPool;
 import java.util.Iterator;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -91,6 +92,7 @@ public class IteratorTaskProcessor<T extends ProcessTask> {
     private void shutdown() throws InterruptedException {
         log.info("shutting down process task queue");
         executor.shutdown();
+        while (!executor.awaitTermination(1, TimeUnit.SECONDS)) {}
         this.callback.complete();
     }
 

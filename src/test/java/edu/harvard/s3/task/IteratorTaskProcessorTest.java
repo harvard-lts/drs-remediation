@@ -27,10 +27,10 @@ import org.junit.jupiter.api.Test;
 /**
  * Process task queue tests.
  */
-public class ProcessTaskQueueTest extends AbstractTaskTest {
+public class IteratorTaskProcessorTest extends AbstractTaskTest {
 
     @Test
-    public void testQueue() {
+    public void testProcessor() {
         Callback callback = mock(Callback.class);
 
         new IteratorTaskProcessor<AmazonS3RemediationTask>(1, this.remediationTasks.iterator(), callback).start();
