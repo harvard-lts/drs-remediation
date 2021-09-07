@@ -57,7 +57,7 @@ public class IteratingTaskProcessor<T extends ProcessTask> {
     }
 
     /**
-     * Start iterator task processor.
+     * Start iterating task processor.
      */
     public void start() {
         int i = 0;
