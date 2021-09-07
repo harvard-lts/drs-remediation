@@ -33,11 +33,9 @@ public class ProcessTaskQueueTest extends AbstractTaskTest {
     public void testQueue() {
         Callback callback = mock(Callback.class);
 
-        final ProcessTaskQueue processTaskQueue = new ProcessTaskQueue(1, callback);
+        new IteratorTaskProcessor<AmazonS3RemediationTask>(1, this.remediationTasks.iterator(), callback).start();
 
-        this.remediationTasks.forEach(task -> processTaskQueue.submit(task));
-
-        verify(callback, timeout(7505).times(1))
+        verify(callback, timeout(500).times(1))
             .complete();
 
         for (int i = 0; i < ids.length; ++i) {

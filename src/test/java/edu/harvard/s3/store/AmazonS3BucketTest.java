@@ -28,11 +28,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.S3Object;
-import software.amazon.awssdk.services.s3.paginators.ListObjectsV2Iterable;
 
 /**
  * Amazon S3 bucket tests.
@@ -82,7 +82,8 @@ public class AmazonS3BucketTest extends AbstractStoreTest {
             endpointOverride
         );
 
-        List<List<S3Object>> paritions = store.partition()
+        Iterable<List<S3Object>> iterable = () -> store.iterator();
+        List<List<S3Object>> paritions = StreamSupport.stream(iterable.spliterator(), false)
             .collect(Collectors.toList());
 
         assertEquals(1, paritions.size());
@@ -102,7 +103,8 @@ public class AmazonS3BucketTest extends AbstractStoreTest {
             endpointOverride
         );
 
-        List<List<S3Object>> paritions = store.partition()
+        Iterable<List<S3Object>> iterable = () -> store.iterator();
+        List<List<S3Object>> paritions = StreamSupport.stream(iterable.spliterator(), false)
             .collect(Collectors.toList());
 
         List<S3Object> originalObjects = paritions.get(0);
@@ -121,9 +123,7 @@ public class AmazonS3BucketTest extends AbstractStoreTest {
             .bucket(getAwsBucketName())
             .build();
 
-        ListObjectsV2Iterable iterable = s3.listObjectsV2Paginator(request);
-
-        List<S3Object> renamedObjects = iterable.contents()
+        List<S3Object> renamedObjects = s3.listObjectsV2Paginator(request).contents()
             .stream()
             .collect(Collectors.toList());
 

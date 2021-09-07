@@ -18,61 +18,56 @@ package edu.harvard.s3.task;
 
 import static java.util.concurrent.Executors.newFixedThreadPool;
 
-import java.util.Objects;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
+import java.util.Iterator;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * Process task queue to execute queue of tasks with provided parallelism.
  */
 @Slf4j
-public class ProcessTaskQueue {
+public class IteratorTaskProcessor<T extends ProcessTask> {
 
     private final long parallelism;
+
+    private final Iterator<T> iterator;
 
     private final Callback callback;
 
     private final ExecutorService executor;
 
-    private final BlockingQueue<ProcessTask> inProcess;
-
-    private final BlockingQueue<ProcessTask> inWait;
-
     /**
      * Process task queue constructor.
      *
      * @param parallelism parallelism desired for queue processing
+     * @param iterator    iterator of process tasks
      * @param callback    callback for when queue completes
      */
-    public ProcessTaskQueue(int parallelism, Callback callback) {
+    public IteratorTaskProcessor(int parallelism, Iterator<T> iterator, Callback callback) {
         this.parallelism = parallelism;
+        this.iterator = iterator;
         this.callback = callback;
         this.executor = newFixedThreadPool(parallelism);
-        this.inProcess = new ArrayBlockingQueue<>(parallelism);
-        this.inWait = new ArrayBlockingQueue<>(98304);
     }
 
     /**
-     * Queue up process task.
-     *
-     * @param task process task to be queued
+     * Start iterator task processor.
      */
-    public void submit(ProcessTask task) {
-        log.info("submitting task {}", task.id());
-        if (inProcess.size() < this.parallelism) {
-            inProcess.add(task);
-            start(task);
-        } else {
-            log.info("task {} queued in wait at position {}", task.id(), inWait.size());
-            inWait.add(task);
+    public void start() {
+        int i = 0;
+        while (this.iterator.hasNext() && i++ < parallelism) {
+            submit(this.iterator.next());
         }
     }
 
-    private void start(ProcessTask task) {
+    /**
+     * Submit task to executor service.
+     *
+     * @param task process task to submit to executor service
+     */
+    public void submit(ProcessTask task) {
+        log.info("submitting task {}", task.id());
         CompletableFuture.supplyAsync(() -> task.execute(), executor)
             .thenAccept(t -> {
                 try {
@@ -86,21 +81,10 @@ public class ProcessTaskQueue {
     private synchronized void complete(ProcessTask task) throws InterruptedException {
         log.info("task {} complete", task.id());
         task.complete();
-        inProcess.remove(task);
-        ProcessTask nextTask = inWait.poll(5, TimeUnit.SECONDS);
-        if (Objects.nonNull(nextTask)) {
-            log.info("task {} dequeued; {} remaining in wait", task.id(), inWait.size());
-            inProcess.add(nextTask);
-            start(nextTask);
+        if (this.iterator.hasNext()) {
+            submit(this.iterator.next());
         } else {
-            log.info("in wait queue is empty; {} in process", inProcess.size());
-            if (inProcess.isEmpty()) {
-                try {
-                    shutdown();
-                } catch (InterruptedException e) {
-                    throw new RuntimeException("Failed shutdown process queue", e);
-                }
-            }
+            shutdown();
         }
     }
 

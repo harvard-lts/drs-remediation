@@ -16,8 +16,8 @@
 
 package edu.harvard.s3.store;
 
+import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Stream;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
 /**
@@ -33,11 +33,11 @@ public interface ObjectStore {
     int count();
 
     /**
-     * Partition the object store.
+     * Iterator of the object store.
      *
-     * @return stream of object partitions
+     * @return iterator of objects
      */
-    Stream<List<S3Object>> partition();
+    Iterator<List<S3Object>> iterator();
 
     /**
      * Rename object source key with destination key.
