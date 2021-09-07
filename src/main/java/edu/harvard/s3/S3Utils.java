@@ -36,7 +36,7 @@ import edu.harvard.s3.store.AmazonS3Bucket;
 import edu.harvard.s3.store.ObjectStore;
 import edu.harvard.s3.task.AmazonS3RemediationTask;
 import edu.harvard.s3.task.Callback;
-import edu.harvard.s3.task.IteratorTaskProcessor;
+import edu.harvard.s3.task.IteratingTaskProcessor;
 import java.util.Iterator;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -91,7 +91,7 @@ public final class S3Utils {
 
         Iterator<List<S3Object>> iterator = s3.iterator();
 
-        new IteratorTaskProcessor<AmazonS3RemediationTask>(getParallelism(), new Iterator<AmazonS3RemediationTask>() {
+        new IteratingTaskProcessor<AmazonS3RemediationTask>(getParallelism(), new Iterator<AmazonS3RemediationTask>() {
 
             @Override
             public boolean hasNext() {

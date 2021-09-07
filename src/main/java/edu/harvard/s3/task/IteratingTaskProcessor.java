@@ -22,13 +22,14 @@ import java.util.Iterator;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Process task queue to execute queue of tasks with provided parallelism.
+ * Concurrently process tasks at parallelism level until iterator completes.
  */
 @Slf4j
-public class IteratorTaskProcessor<T extends ProcessTask> {
+public class IteratingTaskProcessor<T extends ProcessTask> {
 
     private final long parallelism;
 
@@ -38,18 +39,21 @@ public class IteratorTaskProcessor<T extends ProcessTask> {
 
     private final ExecutorService executor;
 
+    private final AtomicInteger count;
+
     /**
-     * Process task queue constructor.
+     * Iterating task processor constructor.
      *
-     * @param parallelism parallelism desired for queue processing
+     * @param parallelism parallelism desired for processing
      * @param iterator    iterator of process tasks
-     * @param callback    callback for when queue completes
+     * @param callback    callback for when iterator completes
      */
-    public IteratorTaskProcessor(int parallelism, Iterator<T> iterator, Callback callback) {
+    public IteratingTaskProcessor(int parallelism, Iterator<T> iterator, Callback callback) {
         this.parallelism = parallelism;
         this.iterator = iterator;
         this.callback = callback;
         this.executor = newFixedThreadPool(parallelism);
+        this.count = new AtomicInteger(0);
     }
 
     /**
@@ -68,7 +72,7 @@ public class IteratorTaskProcessor<T extends ProcessTask> {
      * @param task process task to submit to executor service
      */
     public void submit(ProcessTask task) {
-        log.info("submitting task {}", task.id());
+        log.info("submitting task {}: {}", this.count.incrementAndGet(), task.id());
         CompletableFuture.supplyAsync(() -> task.execute(), executor)
             .thenAccept(t -> {
                 try {
@@ -80,7 +84,7 @@ public class IteratorTaskProcessor<T extends ProcessTask> {
     }
 
     private synchronized void complete(ProcessTask task) throws InterruptedException {
-        log.info("task {} complete", task.id());
+        log.info("completing task {}: {}", this.count.decrementAndGet(), task.id());
         task.complete();
         if (this.iterator.hasNext()) {
             submit(this.iterator.next());
@@ -90,9 +94,9 @@ public class IteratorTaskProcessor<T extends ProcessTask> {
     }
 
     private void shutdown() throws InterruptedException {
-        log.info("shutting down process task queue");
+        log.info("shutting down task processor");
         executor.shutdown();
-        while (!executor.awaitTermination(1, TimeUnit.SECONDS)) {}
+        while (this.count.get() > 0 && !executor.awaitTermination(15, TimeUnit.SECONDS)) {}
         this.callback.complete();
     }
 

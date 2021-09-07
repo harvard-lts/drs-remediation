@@ -25,17 +25,17 @@ import edu.harvard.s3.store.ObjectStore;
 import org.junit.jupiter.api.Test;
 
 /**
- * Process task queue tests.
+ * Iterating task processor tests.
  */
-public class IteratorTaskProcessorTest extends AbstractTaskTest {
+public class IteratingTaskProcessorTest extends AbstractTaskTest {
 
     @Test
     public void testProcessor() {
         Callback callback = mock(Callback.class);
 
-        new IteratorTaskProcessor<AmazonS3RemediationTask>(1, this.remediationTasks.iterator(), callback).start();
+        new IteratingTaskProcessor<AmazonS3RemediationTask>(1, this.remediationTasks.iterator(), callback).start();
 
-        verify(callback, timeout(500).times(1))
+        verify(callback, timeout(1000).times(1))
             .complete();
 
         for (int i = 0; i < ids.length; ++i) {
