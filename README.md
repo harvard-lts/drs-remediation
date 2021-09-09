@@ -78,4 +78,4 @@ Run
 docker-compose up
 ```
 
-> If using docker, do not forget to copy `.env.sample` to `.env` and update accordingly.
+> If using docker, do not forget to copy `.env.example` to `.env` and update accordingly.

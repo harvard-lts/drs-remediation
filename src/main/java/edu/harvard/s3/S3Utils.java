@@ -36,8 +36,11 @@ import edu.harvard.s3.store.AmazonS3Bucket;
 import edu.harvard.s3.store.ObjectStore;
 import edu.harvard.s3.task.AmazonS3RemediationTask;
 import edu.harvard.s3.task.Callback;
-import edu.harvard.s3.task.ProcessTaskQueue;
+import edu.harvard.s3.task.IteratingTaskProcessor;
+import java.util.Iterator;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import software.amazon.awssdk.services.s3.model.S3Object;
 
 /**
  * S3 utilities.
@@ -82,7 +85,37 @@ public final class S3Utils {
 
         final long startTime = nanoTime();
 
-        final ProcessTaskQueue processTaskQueue = new ProcessTaskQueue(getParallelism(), new Callback() {
+        lookup.load();
+
+        log.info("remediation of S3 bucket {} started", getAwsBucketName());
+
+        Iterator<List<S3Object>> iterator = s3.iterator();
+
+        new IteratingTaskProcessor<AmazonS3RemediationTask>(getParallelism(), new Iterator<AmazonS3RemediationTask>() {
+
+            @Override
+            public boolean hasNext() {
+                return iterator.hasNext();
+            }
+
+            @Override
+            public AmazonS3RemediationTask next() {
+
+                ObjectStore store = new AmazonS3Bucket(
+                    getAwsBucketName(),
+                    getAwsMaxKeys(),
+                    getAwsMaxPartSize(),
+                    getAwsMultipartThreshold(),
+                    getAwsSkipMultipart(),
+                    endpointOverride
+                );
+
+                List<S3Object> objects = iterator.next();
+
+                return new AmazonS3RemediationTask(store, lookup, objects);
+            }
+
+        }, new Callback() {
 
             @Override
             public void complete() {
@@ -92,23 +125,7 @@ public final class S3Utils {
                 s3.close();
             }
 
-        });
-
-        lookup.load();
-
-        log.info("remediation of S3 bucket {} started", getAwsBucketName());
-
-        s3.partition().forEach(objects -> {
-            ObjectStore store = new AmazonS3Bucket(
-                getAwsBucketName(),
-                getAwsMaxKeys(),
-                getAwsMaxPartSize(),
-                getAwsMultipartThreshold(),
-                getAwsSkipMultipart(),
-                endpointOverride
-            );
-            processTaskQueue.submit(new AmazonS3RemediationTask(store, lookup, objects));
-        });
+        }).start();
     }
 
 }

@@ -24,10 +24,10 @@ import static org.apache.commons.lang3.StringUtils.removeStart;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -44,6 +44,7 @@ import software.amazon.awssdk.services.s3.model.CreateMultipartUploadRequest;
 import software.amazon.awssdk.services.s3.model.CreateMultipartUploadResponse;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.model.S3Object;
 import software.amazon.awssdk.services.s3.model.UploadPartCopyRequest;
@@ -108,11 +109,25 @@ public class AmazonS3Bucket implements ObjectStore {
     }
 
     @Override
-    public Stream<List<S3Object>> partition() {
-        log.info("streaming object paritions in bucket {}", bucketName);
+    public Iterator<List<S3Object>> iterator() {
+        log.info("iterator of objects in bucket {}", bucketName);
 
-        return list().stream()
-            .map(r -> r.contents());
+        Iterator<ListObjectsV2Response> iterator = list().iterator();
+
+        return new Iterator<List<S3Object>>() {
+
+            @Override
+            public boolean hasNext() {
+                return iterator.hasNext();
+            }
+
+            @Override
+            public List<S3Object> next() {
+                return iterator.next()
+                    .contents();
+            }
+
+        };
     }
 
     @Override
