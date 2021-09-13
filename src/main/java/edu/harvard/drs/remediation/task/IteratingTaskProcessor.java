@@ -41,6 +41,8 @@ public class IteratingTaskProcessor<T extends ProcessTask> {
 
     private final AtomicInteger count;
 
+    private final AtomicInteger total;
+
     /**
      * Iterating task processor constructor.
      *
@@ -54,6 +56,7 @@ public class IteratingTaskProcessor<T extends ProcessTask> {
         this.callback = callback;
         this.executor = newFixedThreadPool(parallelism);
         this.count = new AtomicInteger(0);
+        this.total = new AtomicInteger(0);
     }
 
     /**
@@ -84,7 +87,7 @@ public class IteratingTaskProcessor<T extends ProcessTask> {
     }
 
     private synchronized void complete(ProcessTask task) throws InterruptedException {
-        log.info("completing task {}: {}", this.count.decrementAndGet(), task.id());
+        log.info("completing task {}: {} - {}", this.count.getAndDecrement(), task.id(), this.total.incrementAndGet());
         task.complete();
         if (this.iterator.hasNext()) {
             submit(this.iterator.next());

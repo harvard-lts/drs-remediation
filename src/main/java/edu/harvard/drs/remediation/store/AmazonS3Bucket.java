@@ -148,9 +148,6 @@ public class AmazonS3Bucket implements ObjectStore {
             }
         } catch (SdkClientException | S3Exception e) {
             log.error("Error while attempting to copy object", e);
-            if (log.isDebugEnabled()) {
-                e.printStackTrace();
-            }
             return -1;
         }
 
@@ -158,9 +155,6 @@ public class AmazonS3Bucket implements ObjectStore {
             delete(source);
         } catch (SdkClientException | S3Exception e) {
             log.error("Error while attempting to delete object", e);
-            if (log.isDebugEnabled()) {
-                e.printStackTrace();
-            }
             return -1;
         }
 
@@ -169,7 +163,11 @@ public class AmazonS3Bucket implements ObjectStore {
 
     @Override
     public void close() {
-        this.s3.close();
+        try {
+            this.s3.close();
+        } catch (Exception e) {
+            log.error("Error while attempting to close s3 client", e);
+        }
     }
 
     private ListObjectsV2Iterable list() {
