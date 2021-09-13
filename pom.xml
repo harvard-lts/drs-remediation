@@ -2,17 +2,17 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>edu.harvard.s3</groupId>
-  <artifactId>utils</artifactId>
+  <groupId>edu.harvard.drs</groupId>
+  <artifactId>remediation</artifactId>
   <version>1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
-  <name>edu.harvard.s3:utils</name>
+  <name>edu.harvard.drs:remediation</name>
   <description></description>
   <url></url>
 
   <properties>
-    <main.class>edu.harvard.s3.S3Utils</main.class>
+    <main.class>edu.harvard.drs.remediation.Remediate</main.class>
     <java.version>11</java.version>
     <awssdk.version>2.17.15</awssdk.version>
     <log4j.version>2.14.1</log4j.version>
@@ -270,7 +270,7 @@
         <artifactId>maven-assembly-plugin</artifactId>
         <version>${maven.assembly.version}</version>
         <configuration>
-          <finalName>s3utils</finalName>
+          <finalName>drs-remedaite</finalName>
           <descriptorRefs>
             <descriptorRef>jar-with-dependencies</descriptorRef>
           </descriptorRefs>
