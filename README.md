@@ -51,19 +51,19 @@ mvn clean package
 
 Run
 ```
-java -jar target\drs-remedaite-jar-with-dependencies.jar
+java -jar target\drs-remediate-jar-with-dependencies.jar
 ```
 
 ## Docker
 
 Build
 ```
-docker build --no-cache -t drs-remedaite .
+docker build --no-cache -t drs-remediate .
 ```
 
 Run
 ```
-docker run -v /c/Users/wwelling/Development/harvard/drs-remedaition/external:/external --env-file=.env drs-remedaite
+docker run -v /c/Users/wwelling/Development/harvard/drs-remediation/external:/external --env-file=.env drs-remediate
 ```
 
 ## Docker Compose
