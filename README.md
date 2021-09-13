@@ -1,4 +1,4 @@
-# s3utils
+# drs-remediation
 
 ## Environment
 
@@ -51,19 +51,19 @@ mvn clean package
 
 Run
 ```
-java -jar target\s3utils-jar-with-dependencies.jar
+java -jar target\drs-remedaite-jar-with-dependencies.jar
 ```
 
 ## Docker
 
 Build
 ```
-docker build --no-cache -t s3utils .
+docker build --no-cache -t drs-remedaite .
 ```
 
 Run
 ```
-docker run -v /c/Users/wwelling/Development/harvard/s3utils/external:/external --env-file=.env s3utils
+docker run -v /c/Users/wwelling/Development/harvard/drs-remedaition/external:/external --env-file=.env drs-remedaite
 ```
 
 ## Docker Compose
