@@ -270,7 +270,7 @@
         <artifactId>maven-assembly-plugin</artifactId>
         <version>${maven.assembly.version}</version>
         <configuration>
-          <finalName>drs-remedaite</finalName>
+          <finalName>drs-remediate</finalName>
           <descriptorRefs>
             <descriptorRef>jar-with-dependencies</descriptorRef>
           </descriptorRefs>

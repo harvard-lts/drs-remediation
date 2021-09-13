@@ -20,7 +20,7 @@ VOLUME /external
 WORKDIR /s3
 
 # copy over the built artifact from the maven image
-COPY  --from=maven ./target/drs-remedaite-jar-with-dependencies.jar ./drs-remedaite.jar
+COPY  --from=maven ./target/drs-remediate-jar-with-dependencies.jar ./drs-remediate.jar
 
 # run java command
-CMD ["java", "-jar", "-Xmx8192m", "./drs-remedaite.jar"]
+CMD ["java", "-jar", "-Xmx8192m", "./drs-remediate.jar"]
