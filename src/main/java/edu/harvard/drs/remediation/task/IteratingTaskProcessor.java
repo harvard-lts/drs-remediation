@@ -84,7 +84,7 @@ public class IteratingTaskProcessor<T extends ProcessTask> {
             .thenAccept(t -> complete(t));
     }
 
-    private synchronized void complete(ProcessTask task) {
+    private void complete(ProcessTask task) {
         log.info("completing task {}: {} - {}", this.count.getAndDecrement(), task.id(), this.total.incrementAndGet());
         task.complete();
         if (this.iterator.hasNext()) {
