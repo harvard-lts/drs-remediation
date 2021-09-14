@@ -66,7 +66,7 @@ public class IteratingTaskProcessor<T extends ProcessTask> {
     /**
      * Start iterating task processor.
      */
-    public synchronized void start() {
+    public void start() {
         int i = 0;
         while (this.iterator.hasNext() && i++ < parallelism) {
             submit(this.iterator.next());
