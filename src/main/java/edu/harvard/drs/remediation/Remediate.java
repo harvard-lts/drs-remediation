@@ -100,7 +100,6 @@ public final class Remediate {
 
             @Override
             public AmazonS3RemediationTask next() {
-
                 ObjectStore store = new AmazonS3Bucket(
                     getAwsBucketName(),
                     getAwsMaxKeys(),

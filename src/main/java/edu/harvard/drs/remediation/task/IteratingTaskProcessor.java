@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,6 +44,8 @@ public class IteratingTaskProcessor<T extends ProcessTask> {
 
     private final AtomicInteger total;
 
+    private final AtomicBoolean shuttingDown;
+
     /**
      * Iterating task processor constructor.
      *
@@ -55,14 +58,15 @@ public class IteratingTaskProcessor<T extends ProcessTask> {
         this.iterator = iterator;
         this.callback = callback;
         this.executor = newFixedThreadPool(parallelism);
-        this.count = new AtomicInteger(0);
-        this.total = new AtomicInteger(0);
+        this.count = new AtomicInteger();
+        this.total = new AtomicInteger();
+        this.shuttingDown = new AtomicBoolean();
     }
 
     /**
      * Start iterating task processor.
      */
-    public void start() {
+    public synchronized void start() {
         int i = 0;
         while (this.iterator.hasNext() && i++ < parallelism) {
             submit(this.iterator.next());
@@ -77,29 +81,30 @@ public class IteratingTaskProcessor<T extends ProcessTask> {
     public void submit(ProcessTask task) {
         log.info("submitting task {}: {}", this.count.incrementAndGet(), task.id());
         CompletableFuture.supplyAsync(() -> task.execute(), executor)
-            .thenAccept(t -> {
-                try {
-                    complete(t);
-                } catch (InterruptedException e) {
-                    log.error("failed to complete task", e);
-                }
-            });
+            .thenAccept(t -> complete(t));
     }
 
-    private synchronized void complete(ProcessTask task) throws InterruptedException {
+    private synchronized void complete(ProcessTask task) {
         log.info("completing task {}: {} - {}", this.count.getAndDecrement(), task.id(), this.total.incrementAndGet());
         task.complete();
         if (this.iterator.hasNext()) {
             submit(this.iterator.next());
         } else {
-            shutdown();
+            if (this.shuttingDown.compareAndSet(false, true)) {
+                shutdown();
+            }
         }
     }
 
-    private void shutdown() throws InterruptedException {
-        log.info("shutting down task processor");
+    private void shutdown() {
+        log.info("shutting down task processor waiting on {} tasks in progress", this.count.get());
         executor.shutdown();
-        while (this.count.get() > 0 && !executor.awaitTermination(15, TimeUnit.SECONDS)) {}
+        try {
+            while (this.count.get() > 0 && !executor.awaitTermination(15, TimeUnit.SECONDS)) {}
+        } catch (InterruptedException e) {
+            log.error("Failed to await termination", e);
+            executor.shutdownNow();
+        }
         this.callback.complete();
     }
 
