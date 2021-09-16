@@ -94,13 +94,12 @@ public final class Remediate {
         new IteratingTaskProcessor<AmazonS3RemediationTask>(getParallelism(), new Iterator<AmazonS3RemediationTask>() {
 
             @Override
-            public boolean hasNext() {
+            public synchronized boolean hasNext() {
                 return iterator.hasNext();
             }
 
             @Override
-            public AmazonS3RemediationTask next() {
-
+            public synchronized AmazonS3RemediationTask next() {
                 ObjectStore store = new AmazonS3Bucket(
                     getAwsBucketName(),
                     getAwsMaxKeys(),
