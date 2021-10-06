@@ -19,7 +19,6 @@ package edu.harvard.drs.remediation;
 import static edu.harvard.drs.remediation.utility.EnvUtils.getAwsBucketName;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import edu.harvard.drs.remediation.Remediate;
 import edu.harvard.drs.remediation.store.AbstractStoreTest;
 import java.util.Arrays;
 import java.util.List;

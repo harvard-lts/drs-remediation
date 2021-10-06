@@ -18,7 +18,6 @@ package edu.harvard.drs.remediation.lookup;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import edu.harvard.drs.remediation.lookup.InMemoryMap;
 import org.junit.jupiter.api.Test;
 
 /**

@@ -24,7 +24,6 @@ import static edu.harvard.drs.remediation.utility.EnvUtils.getAwsSkipMultipart;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import edu.harvard.drs.remediation.store.AmazonS3Bucket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;

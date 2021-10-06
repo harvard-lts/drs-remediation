@@ -32,7 +32,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.adobe.testing.s3mock.junit5.S3MockExtension;
 import edu.harvard.drs.remediation.loader.FileLoader;
-import edu.harvard.drs.remediation.store.ObjectPart;
 import io.netty.util.internal.ThreadLocalRandom;
 import java.io.File;
 import java.io.FileInputStream;
