@@ -22,9 +22,6 @@ import static org.mockito.Mockito.verify;
 
 import edu.harvard.drs.remediation.lookup.LookupTable;
 import edu.harvard.drs.remediation.store.ObjectStore;
-import edu.harvard.drs.remediation.task.AmazonS3RemediationTask;
-import edu.harvard.drs.remediation.task.Callback;
-import edu.harvard.drs.remediation.task.IteratingTaskProcessor;
 import org.junit.jupiter.api.Test;
 
 /**

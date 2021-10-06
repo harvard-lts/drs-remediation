@@ -21,7 +21,6 @@ import static org.mockito.Mockito.doReturn;
 
 import edu.harvard.drs.remediation.lookup.LookupTable;
 import edu.harvard.drs.remediation.store.ObjectStore;
-import edu.harvard.drs.remediation.task.AmazonS3RemediationTask;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
