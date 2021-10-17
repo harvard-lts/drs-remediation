@@ -19,9 +19,7 @@ package edu.harvard.drs.remediation.task;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 
-import edu.harvard.drs.remediation.lookup.LookupTable;
 import edu.harvard.drs.remediation.store.ObjectStore;
-import edu.harvard.drs.remediation.task.AmazonS3RemediationTask;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,35 +40,38 @@ public abstract class AbstractTaskTest {
     @Mock
     ObjectStore store;
 
-    @Mock
-    LookupTable<String, String> lookup;
-
     final List<ObjectStore> objectStores = new ArrayList<>();
-
-    final List<LookupTable<String, String>> lookupStores = new ArrayList<>();
 
     final List<AmazonS3RemediationTask> remediationTasks = new ArrayList<>();
 
     final String[] ids = new String[] {
-        "400171120",
-        "400171138"
-    };
-
-    final String[] nss = new String[] {
         "12887296",
         "12887305"
     };
 
     final String[][] keys = new String[][] {
         {
-            "0400171120/v1/content/data/400171120.png",
-            "0400171120/v1/content/descriptor/400171120_mets.xml",
-            "0400171120/v1/content/metadata/400171120_mods.xml"
+            "12887296/v1/content/data/400171120.png",
+            "12887296/v1/content/descriptor/400171120_mets.xml",
+            "12887296/v1/content/metadata/400171120_mods.xml"
         },
         {
-            "0400171138/v1/content/data/400171138.png",
-            "0400171138/v1/content/descriptor/400171138_mets.xml",
-            "0400171138/v1/content/metadata/400171138_mods.xml"
+            "12887305/v1/content/data/400171138.png",
+            "12887305/v1/content/descriptor/400171138_mets.xml",
+            "12887305/v1/content/metadata/400171138_mods.xml"
+        }
+    };
+
+    final String[][] destinationKeys = new String[][] {
+        {
+            "6927/8821/12887296/v1/content/data/400171120.png",
+            "6927/8821/12887296/v1/content/descriptor/400171120_mets.xml",
+            "6927/8821/12887296/v1/content/metadata/400171120_mods.xml"
+        },
+        {
+            "5037/8821/12887305/v1/content/data/400171138.png",
+            "5037/8821/12887305/v1/content/descriptor/400171138_mets.xml",
+            "5037/8821/12887305/v1/content/metadata/400171138_mods.xml"
         }
     };
 
@@ -80,8 +81,6 @@ public abstract class AbstractTaskTest {
     void setup() {
         this.objectStores.add(this.store);
         this.objectStores.add(this.store);
-        this.lookupStores.add(this.lookup);
-        this.lookupStores.add(this.lookup);
 
         for (int i = 0; i < ids.length; ++i) {
             List<S3Object> partition = new ArrayList<>();
@@ -92,32 +91,21 @@ public abstract class AbstractTaskTest {
 
             ObjectStore store = this.objectStores.get(i);
 
-            LookupTable<String, String> lookup = this.lookupStores.get(i);
-
-            doReturn(nss[i])
-                .when(lookup)
-                .get(ids[i]);
-
             doNothing()
                 .when(store)
                 .close();
 
             for (int k = 0; k < keys[0].length; ++k) {
-                doReturn(0)
+                int result = keys[i][0].equals("12887296/v1/content/data/400171120.png")
+                    ? 1
+                    : 0;
+                doReturn(result)
                     .when(store)
-                    .rename(partition.get(k), destinationKey(i, k));
+                    .rename(partition.get(k), destinationKeys[i][k]);
             }
 
-            this.remediationTasks.add(new AmazonS3RemediationTask(store, lookup, partition));
+            this.remediationTasks.add(new AmazonS3RemediationTask(store, partition));
         }
-    }
-
-    String destinationKey(int i, int k) {
-        return keys[i][k].replace("0" + ids[i], nss[i]);
-    }
-
-    String destinationKey(String key) {
-        return key.replace("0" + ids[0], nss[0]);
     }
 
     private S3Object object(String key) {

@@ -21,17 +21,12 @@ import static edu.harvard.drs.remediation.utility.EnvUtils.getAwsMaxKeys;
 import static edu.harvard.drs.remediation.utility.EnvUtils.getAwsMaxPartSize;
 import static edu.harvard.drs.remediation.utility.EnvUtils.getAwsMultipartThreshold;
 import static edu.harvard.drs.remediation.utility.EnvUtils.getAwsSkipMultipart;
-import static edu.harvard.drs.remediation.utility.EnvUtils.getInputPath;
-import static edu.harvard.drs.remediation.utility.EnvUtils.getInputPattern;
-import static edu.harvard.drs.remediation.utility.EnvUtils.getInputSkip;
 import static edu.harvard.drs.remediation.utility.EnvUtils.getParallelism;
 import static edu.harvard.drs.remediation.utility.RuntimeUtils.availableProcessors;
 import static edu.harvard.drs.remediation.utility.RuntimeUtils.totalMemory;
 import static edu.harvard.drs.remediation.utility.TimeUtils.elapsed;
 import static java.lang.System.nanoTime;
 
-import edu.harvard.drs.remediation.loader.FileLoader;
-import edu.harvard.drs.remediation.lookup.InMemoryLookupTable;
 import edu.harvard.drs.remediation.store.AmazonS3Bucket;
 import edu.harvard.drs.remediation.store.ObjectStore;
 import edu.harvard.drs.remediation.task.AmazonS3RemediationTask;
@@ -67,12 +62,7 @@ public final class Remediate {
 
         log.info("{} parallelism", getParallelism());
 
-        final String inputPath = args.length > 0 ? args[0] : getInputPath();
-
-        final String endpointOverride = args.length > 1 ? args[1] : null;
-
-        final FileLoader loader = new FileLoader(inputPath, getInputPattern(), getInputSkip());
-        final InMemoryLookupTable lookup = new InMemoryLookupTable(loader);
+        final String endpointOverride = args.length > 0 ? args[0] : null;
 
         final AmazonS3Bucket s3 = new AmazonS3Bucket(
             getAwsBucketName(),
@@ -84,8 +74,6 @@ public final class Remediate {
         );
 
         final long startTime = nanoTime();
-
-        lookup.load();
 
         log.info("remediation of S3 bucket {} started", getAwsBucketName());
 
@@ -111,7 +99,7 @@ public final class Remediate {
 
                 List<S3Object> objects = iterator.next();
 
-                return new AmazonS3RemediationTask(store, lookup, objects);
+                return new AmazonS3RemediationTask(store, objects);
             }
 
         }, new Callback() {
@@ -120,7 +108,6 @@ public final class Remediate {
             public void complete() {
                 log.info("remediation of S3 bucket {} completed in {} milliseconds",
                     getAwsBucketName(), elapsed(startTime));
-                lookup.unload();
                 s3.close();
             }
 

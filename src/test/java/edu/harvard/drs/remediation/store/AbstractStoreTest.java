@@ -18,8 +18,6 @@ package edu.harvard.drs.remediation.store;
 
 import static edu.harvard.drs.remediation.utility.EnvUtils.getAwsBucketName;
 import static edu.harvard.drs.remediation.utility.EnvUtils.getAwsMaxPartSize;
-import static edu.harvard.drs.remediation.utility.EnvUtils.getInputPattern;
-import static edu.harvard.drs.remediation.utility.EnvUtils.getInputSkip;
 import static java.lang.String.format;
 import static java.nio.file.StandardOpenOption.CREATE_NEW;
 import static java.nio.file.StandardOpenOption.SPARSE;
@@ -31,8 +29,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.adobe.testing.s3mock.junit5.S3MockExtension;
-import edu.harvard.drs.remediation.loader.FileLoader;
-import edu.harvard.drs.remediation.store.ObjectPart;
 import io.netty.util.internal.ThreadLocalRandom;
 import java.io.File;
 import java.io.FileInputStream;
@@ -45,8 +41,8 @@ import java.nio.file.Files;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -87,8 +83,6 @@ import software.amazon.awssdk.services.s3.paginators.ListObjectsV2Iterable;
 @ExtendWith(S3MockExtension.class)
 public abstract class AbstractStoreTest {
 
-    protected final String inputPath = "src/test/resources/dump.txt";
-
     protected final String endpointOverride = "http://localhost:9090";
 
     @BeforeAll
@@ -99,34 +93,29 @@ public abstract class AbstractStoreTest {
 
         s3.createBucket(createBucketRequest);
 
-        final String path = "src/test/resources/dump.txt";
-        final String pattern = getInputPattern();
-        final int skip = getInputSkip();
-
-        FileLoader loader = new FileLoader(path, pattern, skip);
-
-        List<SimpleEntry<String, String>> entries = loader.load()
-            .collect(Collectors.toList());
-
         File mets = new File("src/test/resources/objects/0492131461/v1/content/descriptor/492131461_mets.xml");
         File mods = new File("src/test/resources/objects/0492131461/v1/content/metadata/492131461_mods.xml");
         File png = new File("src/test/resources/objects/0492131461/v1/content/data/492131461.png");
 
-        List<String> ids = entries.stream()
-            .map(e -> e.getKey())
-            .collect(Collectors.toList());
+        List<String[]> ids = Arrays.asList(new String[][] {
+            { "12887301", "400171130" },
+            { "12887302", "400171132" },
+            { "12887305", "400171138" },
+            { "12887296", "400171120" },
+            { "12887299", "400171126" },
+        });
 
-        for (String id : ids) {
-            putObject(s3, mets, format("0%1$s/v1/content/descriptor/%1$s_mets.xml", id));
-            putObject(s3, mods, format("0%1$s/v1/content/metadata/%1$s_mods.xml", id));
-            putObject(s3, png, format("0%1$s/v1/content/data/%1$s.png", id));
+        for (String[] id : ids) {
+            putObject(s3, mets, format("%s/v1/content/descriptor/%s_mets.xml", id[0], id[1]));
+            putObject(s3, mods, format("%s/v1/content/metadata/%s_mods.xml", id[0], id[1]));
+            putObject(s3, png, format("%s/v1/content/data/%s.png", id[0], id[1]));
 
-            String filePath = format("target/%1$s.lfs", id);
+            String filePath = format("target/%s.lfs", id[0], id[1]);
             long sizeInBytes = random(104857600L, 262144000L);
 
             File lfs = createLargeFile(filePath, sizeInBytes);
 
-            multipartUpload(s3, lfs, format("0%1$s/v1/content/data/%1$s.lfs", id));
+            multipartUpload(s3, lfs, format("%s/v1/content/data/%s.lfs", id[0], id[1]));
 
             lfs.delete();
 

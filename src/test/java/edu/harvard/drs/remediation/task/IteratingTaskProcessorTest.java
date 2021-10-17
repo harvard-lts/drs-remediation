@@ -20,11 +20,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 
-import edu.harvard.drs.remediation.lookup.LookupTable;
 import edu.harvard.drs.remediation.store.ObjectStore;
-import edu.harvard.drs.remediation.task.AmazonS3RemediationTask;
-import edu.harvard.drs.remediation.task.Callback;
-import edu.harvard.drs.remediation.task.IteratingTaskProcessor;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -44,14 +40,9 @@ public class IteratingTaskProcessorTest extends AbstractTaskTest {
         for (int i = 0; i < ids.length; ++i) {
             ObjectStore store = this.objectStores.get(i);
 
-            LookupTable<String, String> lookup = this.lookupStores.get(i);
-
-            verify(lookup, timeout(100).times(3))
-                .get(ids[i]);
-
             for (int k = 0; k < keys[0].length; ++k) {
                 verify(store, timeout(100).times(1))
-                    .rename(partitions.get(i).get(k), destinationKey(i, k));
+                    .rename(partitions.get(i).get(k), destinationKeys[i][k]);
             }
         }
     }

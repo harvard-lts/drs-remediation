@@ -17,13 +17,13 @@
 package edu.harvard.drs.remediation.task;
 
 import static edu.harvard.drs.remediation.utility.TimeUtils.elapsed;
+import static java.lang.String.format;
 import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.StringUtils.reverse;
 
-import edu.harvard.drs.remediation.lookup.LookupTable;
 import edu.harvard.drs.remediation.store.ObjectStore;
 import java.util.List;
 import java.util.UUID;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.s3.model.S3Object;
@@ -32,18 +32,13 @@ import software.amazon.awssdk.services.s3.model.S3Object;
  * Amazon S3 remediation task to rename object source key using provided lookup
  * table.
  */
-@Slf4j
 public class AmazonS3RemediationTask implements ProcessTask {
 
     private static final Logger remediation = LoggerFactory.getLogger("remediation");
 
-    private static final String ZERO = "0";
-
     private static final String PATH_SEPARATOR = "/";
 
     private final ObjectStore s3;
-
-    private final LookupTable<String, String> lookup;
 
     private final List<S3Object> objects;
 
@@ -53,16 +48,13 @@ public class AmazonS3RemediationTask implements ProcessTask {
      * Amazon S3 remediation task constructor.
      *
      * @param s3      object store to remediate
-     * @param lookup  lookup table used to rename object keys
      * @param objects list of S3 objects to remediate
      */
     public AmazonS3RemediationTask(
         ObjectStore s3,
-        LookupTable<String, String> lookup,
         List<S3Object> objects
     ) {
         this.s3 = s3;
-        this.lookup = lookup;
         this.objects = objects;
         this.id = UUID.randomUUID().toString();
     }
@@ -89,47 +81,46 @@ public class AmazonS3RemediationTask implements ProcessTask {
      *
      * @param object S3 object
      */
-    void remediate(S3Object object) {
+    int remediate(S3Object object) {
+        int result = 0;
         String destinationKey = mapKey(object.key());
 
         if (nonNull(destinationKey)) {
             long startTime = System.nanoTime();
-            int result = this.s3.rename(object, destinationKey);
+            result = this.s3.rename(object, destinationKey);
             remediation.info("{},{},{},{},{},{}",
                 object.key(), destinationKey, object.eTag(), object.size(), result, elapsed(startTime));
         }
+
+        return result;
     }
 
     /**
-     * Replace root "folder" DRS id with URN NSS.
+     * Append reverse URN NSS paths to key.
+     *
+     * <p>
+     * 101062745/v00001/content/data/400094393.jp2
+     * to
+     * 5472/6010/101062745/v00001/content/data/400094393.jp2
+     * </p>
      *
      * @param key object key
      * @return remediated object key
      */
     String mapKey(String key) {
         // parse root "folder" from object key
-        String iid = key.contains(PATH_SEPARATOR)
+        String nss = key.contains(PATH_SEPARATOR)
             ? key.substring(0, key.indexOf(PATH_SEPARATOR))
             : key;
 
-        String id = iid;
+        String reversedNss = reverse(nss);
 
-        // remove leading zeroes
-        while (id.startsWith(ZERO)) {
-            id = id.substring(1);
-        }
-
-        // lookup root "folder" as id
-        String nss = this.lookup.get(id);
-
-        if (nonNull(nss)) {
-            // replace root "folder", DRS id, with URN NSS of object key
-            return key.replace(iid + PATH_SEPARATOR, nss + PATH_SEPARATOR);
-        } else {
-            log.warn("key {} not found in lookup table, skipping {}", id, key);
-        }
-
-        return null;
+        return format(
+            "%s/%s/%s",
+            reversedNss.substring(0, 4),
+            reversedNss.substring(4, 8),
+            key
+        );
     }
 
 }
