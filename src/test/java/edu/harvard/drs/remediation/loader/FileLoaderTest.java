@@ -21,7 +21,6 @@ import static edu.harvard.drs.remediation.utility.EnvUtils.getInputSkip;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import edu.harvard.drs.remediation.loader.FileLoader;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.List;
 import java.util.stream.Collectors;
