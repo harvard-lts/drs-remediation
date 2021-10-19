@@ -23,9 +23,7 @@
 
 ### Amazon S3 Remediation Task
 
-This task will first load specified input file and process each line with input pattern skipping number of lines specified by input skip. The two capture groups of the input pattern will populate an in memory lookup table.
-
-Next an Amazon S3 bucket will be partitioned by the number of specified AWS list max keys. Each partition will be a list of S3 objects that may need to be remediated by renaming its key.
+This task will partition an Amazon S3 bucket by the number of specified AWS list max keys. Each partition will be a list of S3 objects that may need to be remediated by renaming its key.
 
 The remediation process:
 
