@@ -77,7 +77,7 @@ public class AmazonS3RemediationTask implements ProcessTask {
     }
 
     /**
-     * Remediate S3 object key by renaming with DRS id replaced by URN NSS.
+     * Remediate S3 object key by renaming.
      *
      * @param object S3 object
      */
