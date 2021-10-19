@@ -36,9 +36,7 @@ The remediation process:
 5. copy object from source key to renamed destination key
 6. delete source object
 
-> If the key is not found in lookup table the remediation will be skipped for that object.
-
-Each partition will be provided to a process task along with a lookup table and object store to be queued in a process queue until all objects have been processed.
+Each partition will be provided to a process task along with a object store to be queued in a process queue until all objects have been processed.
 
 Each object remediated will result in a row in the remediation log. Each row will consist of source object key, destination object key, object eTag, object size in bytes, result of rename (0 = success, 1 = skipped, -1 = s3 client/server error, -2 = copy incorrect etag), and ellapsed time in milliseconds. The remediation log will be appended on subsequent executions.
 
