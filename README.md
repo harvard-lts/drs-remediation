@@ -24,10 +24,9 @@ This task will partition an Amazon S3 bucket by the number of specified AWS list
 
 The remediation process:
 
-1. parse root path from object key
-2. remove any leading zeroes of root path
-3. use root path as key for lookup for URN NNS value
-4. replace root path with URN NSS value
+1. parse root (URN NSS) path from object key
+2. reverse URN NSS
+3. append two additional "directory", <first-4-chars-of-reversed-nss>/<second-4-chars-of-reversed-nss>/<nss>/some/path
 5. copy object from source key to renamed destination key
 6. delete source object
 
