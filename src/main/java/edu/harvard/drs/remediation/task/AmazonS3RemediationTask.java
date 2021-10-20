@@ -130,7 +130,8 @@ public class AmazonS3RemediationTask implements ProcessTask {
         String reversedNss = reverse(nss);
 
         if (reversedNss.length() < 8) {
-            reversedNss = format("%8s", reversedNss);
+            reversedNss = format("%8s", reversedNss)
+                .replace(' ', '0');
         }
 
         return format(
