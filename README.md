@@ -26,7 +26,7 @@ The remediation process:
 
 1. parse root (URN NSS) path from object key
 2. reverse URN NSS
-3. append two additional "directory", <first-4-chars-of-reversed-nss>/<second-4-chars-of-reversed-nss>/<nss>/some/path
+3. prepend two additional "directory", <first-4-chars-of-reversed-nss>/<second-4-chars-of-reversed-nss>/<nss>/some/path
 4. copy object from source key to renamed destination key
 5. delete source object
 
