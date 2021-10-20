@@ -91,7 +91,7 @@ public class AmazonS3RemediationTask implements ProcessTask {
 
         try {
             destinationKey = mapKey(object.key());
-        } catch (NumberFormatException | IndexOutOfBoundsException e) {
+        } catch (NumberFormatException e) {
             result = 2;
         }
 
@@ -117,9 +117,8 @@ public class AmazonS3RemediationTask implements ProcessTask {
      * @param key object key
      * @return remediated object key
      * @throws NumberFormatException not a number
-     * @throws IndexOutOfBoundsException not at least 8 characters
      */
-    String mapKey(String key) throws NumberFormatException, IndexOutOfBoundsException {
+    String mapKey(String key) throws NumberFormatException {
         // parse root "folder" from object key
         String nss = key.contains(PATH_SEPARATOR)
             ? key.substring(0, key.indexOf(PATH_SEPARATOR))
@@ -129,6 +128,10 @@ public class AmazonS3RemediationTask implements ProcessTask {
         Long.parseLong(nss);
 
         String reversedNss = reverse(nss);
+
+        if (reversedNss.length() < 8) {
+            reversedNss = format("%8s", reversedNss);
+        }
 
         return format(
             "%s/%s/%s",
