@@ -19,6 +19,7 @@ package edu.harvard.drs.remediation.task;
 import static edu.harvard.drs.remediation.utility.TimeUtils.elapsed;
 import static java.lang.String.format;
 import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.StringUtils.leftPad;
 import static org.apache.commons.lang3.StringUtils.reverse;
 
 import edu.harvard.drs.remediation.store.ObjectStore;
@@ -127,12 +128,7 @@ public class AmazonS3RemediationTask implements ProcessTask {
         // ensure nss is a number
         Long.parseLong(nss);
 
-        String reversedNss = reverse(nss);
-
-        if (reversedNss.length() < 8) {
-            reversedNss = format("%8s", reversedNss)
-                .replace(' ', '0');
-        }
+        String reversedNss = leftPad(reverse(nss), 8, "0");
 
         return format(
             "%s/%s/%s",
