@@ -80,17 +80,27 @@ public class AmazonS3RemediationTask implements ProcessTask {
      * Remediate S3 object key by renaming.
      *
      * @param object S3 object
+     * @return result of rename
      */
     int remediate(S3Object object) {
         int result = 0;
-        String destinationKey = mapKey(object.key());
+
+        long startTime = System.nanoTime();
+
+        String destinationKey = null;
+
+        try {
+            destinationKey = mapKey(object.key());
+        } catch (NumberFormatException | IndexOutOfBoundsException e) {
+            result = 2;
+        }
 
         if (nonNull(destinationKey)) {
-            long startTime = System.nanoTime();
             result = this.s3.rename(object, destinationKey);
-            remediation.info("{},{},{},{},{},{}",
-                object.key(), destinationKey, object.eTag(), object.size(), result, elapsed(startTime));
         }
+
+        remediation.info("{},{},{},{},{},{}",
+            object.key(), destinationKey, object.eTag(), object.size(), result, elapsed(startTime));
 
         return result;
     }
@@ -106,12 +116,17 @@ public class AmazonS3RemediationTask implements ProcessTask {
      *
      * @param key object key
      * @return remediated object key
+     * @throws NumberFormatException not a number
+     * @throws IndexOutOfBoundsException not at least 8 characters
      */
-    String mapKey(String key) {
+    String mapKey(String key) throws NumberFormatException, IndexOutOfBoundsException {
         // parse root "folder" from object key
         String nss = key.contains(PATH_SEPARATOR)
             ? key.substring(0, key.indexOf(PATH_SEPARATOR))
             : key;
+
+        // ensure nss is a number
+        Long.parseLong(nss);
 
         String reversedNss = reverse(nss);
 
