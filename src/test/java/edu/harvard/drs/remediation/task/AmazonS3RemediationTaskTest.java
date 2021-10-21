@@ -18,7 +18,6 @@ package edu.harvard.drs.remediation.task;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -30,19 +29,14 @@ import software.amazon.awssdk.services.s3.model.S3Object;
  */
 public class AmazonS3RemediationTaskTest extends AbstractTaskTest {
 
-    private final String key = "822376800000/v1/content/descriptor/822376800000_mets.xml";
-
     @Test
     public void testExecute() {
         this.remediationTasks.get(0)
             .execute();
 
-        verify(this.lookup, times(3))
-            .get(ids[0]);
-
         for (int k = 0; k < keys[0].length; ++k) {
             verify(this.store, times(1))
-                .rename(partitions.get(0).get(k), destinationKey(0, k));
+                .rename(partitions.get(0).get(k), destinationKeys[0][k]);
         }
     }
 
@@ -58,29 +52,25 @@ public class AmazonS3RemediationTaskTest extends AbstractTaskTest {
     @Test
     public void testRemediate() {
         this.remediationTasks.get(0)
-            .remediate(partitions.get(0).get(0));
-
-        verify(this.lookup, times(1))
-            .get(ids[0]);
+            .remediate(partitions.get(0).get(1));
 
         verify(this.store, times(1))
-            .rename(partitions.get(0).get(0), destinationKey(0, 0));
+            .rename(partitions.get(0).get(1), destinationKeys[0][1]);
     }
 
     @Test
     public void testRemediateSkipped() {
         S3Object object = S3Object.builder()
-            .key(key)
+            .key(keys[0][0])
             .build();
 
-        this.remediationTasks.get(0)
+        int actual = this.remediationTasks.get(0)
             .remediate(object);
 
-        verify(this.lookup, times(1))
-            .get(key.split("/")[0]);
+        verify(this.store, times(1))
+            .rename(object, destinationKeys[0][0]);
 
-        verify(this.store, times(0))
-            .rename(object, destinationKey(key));
+        assertEquals(1, actual);
     }
 
     @Test
@@ -89,19 +79,7 @@ public class AmazonS3RemediationTaskTest extends AbstractTaskTest {
             .mapKey(keys[0][0]);
 
         assertNotNull(urn);
-
-        assertEquals("12887296/v1/content/data/400171120.png", urn);
-
-        verify(this.lookup, times(1))
-            .get(ids[0]);
-    }
-
-    @Test
-    public void testMapKeyNotFound() {
-        String urn = this.remediationTasks.get(0)
-            .mapKey(key);
-
-        assertNull(urn);
+        assertEquals(destinationKeys[0][0], urn);
     }
 
 }

@@ -36,32 +36,32 @@ public class RemediateTest extends AbstractStoreTest {
 
     @Test
     public void testMain(final S3Client s3) throws InterruptedException {
-        Remediate.main(new String[] { inputPath, endpointOverride });
+        Remediate.main(new String[] { endpointOverride });
 
         // unfortunately no better way to wait until main is complete
         Thread.sleep(45000);
 
         List<String> expectedRenamedKeys = Arrays.asList(new String[] {
-            "12887296/v1/content/data/400171120.lfs",
-            "12887296/v1/content/data/400171120.png",
-            "12887296/v1/content/descriptor/400171120_mets.xml",
-            "12887296/v1/content/metadata/400171120_mods.xml",
-            "12887299/v1/content/data/400171126.lfs",
-            "12887299/v1/content/data/400171126.png",
-            "12887299/v1/content/descriptor/400171126_mets.xml",
-            "12887299/v1/content/metadata/400171126_mods.xml",
-            "12887301/v1/content/data/400171130.lfs",
-            "12887301/v1/content/data/400171130.png",
-            "12887301/v1/content/descriptor/400171130_mets.xml",
-            "12887301/v1/content/metadata/400171130_mods.xml",
-            "12887302/v1/content/data/400171132.lfs",
-            "12887302/v1/content/data/400171132.png",
-            "12887302/v1/content/descriptor/400171132_mets.xml",
-            "12887302/v1/content/metadata/400171132_mods.xml",
-            "12887305/v1/content/data/400171138.lfs",
-            "12887305/v1/content/data/400171138.png",
-            "12887305/v1/content/descriptor/400171138_mets.xml",
-            "12887305/v1/content/metadata/400171138_mods.xml"
+            "1037/8821/12887301/v1/content/data/400171130.lfs",
+            "1037/8821/12887301/v1/content/data/400171130.png",
+            "1037/8821/12887301/v1/content/descriptor/400171130_mets.xml",
+            "1037/8821/12887301/v1/content/metadata/400171130_mods.xml",
+            "2037/8821/12887302/v1/content/data/400171132.lfs",
+            "2037/8821/12887302/v1/content/data/400171132.png",
+            "2037/8821/12887302/v1/content/descriptor/400171132_mets.xml",
+            "2037/8821/12887302/v1/content/metadata/400171132_mods.xml",
+            "5037/8821/12887305/v1/content/data/400171138.lfs",
+            "5037/8821/12887305/v1/content/data/400171138.png",
+            "5037/8821/12887305/v1/content/descriptor/400171138_mets.xml",
+            "5037/8821/12887305/v1/content/metadata/400171138_mods.xml",
+            "6927/8821/12887296/v1/content/data/400171120.lfs",
+            "6927/8821/12887296/v1/content/data/400171120.png",
+            "6927/8821/12887296/v1/content/descriptor/400171120_mets.xml",
+            "6927/8821/12887296/v1/content/metadata/400171120_mods.xml",
+            "9927/8821/12887299/v1/content/data/400171126.lfs",
+            "9927/8821/12887299/v1/content/data/400171126.png",
+            "9927/8821/12887299/v1/content/descriptor/400171126_mets.xml",
+            "9927/8821/12887299/v1/content/metadata/400171126_mods.xml"
         });
 
         ListObjectsV2Request request = ListObjectsV2Request.builder()
