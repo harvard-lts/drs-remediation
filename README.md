@@ -32,7 +32,13 @@ The remediation process:
 
 Each partition will be provided to a process task along with a object store to be queued in a process queue until all objects have been processed.
 
-Each object remediated will result in a row in the remediation log. Each row will consist of source object key, destination object key, object eTag, object size in bytes, result of rename, and ellapsed time in milliseconds. The remediation log will be appended on subsequent executions.
+Each object remediated will result in a row in the remediation log. ***The remediation log will be appended on subsequent executions.***
+
+Remediation log:
+
+```csv
+source object key, destination object key, object eTag, object size in bytes, result of rename, and ellapsed time in milliseconds
+```
 
 The result flag:
 
