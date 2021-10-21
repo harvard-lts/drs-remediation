@@ -38,7 +38,7 @@ Each object remediated will result in a row in the remediation log. ***The remed
 Remediation log:
 
 ```csv
-source object key, destination object key, object eTag, object size in bytes, result of rename, and ellapsed time in milliseconds
+source object key, destination object key, object eTag, object size in bytes, result of rename, ellapsed time in milliseconds
 ```
 
 The result flag:
