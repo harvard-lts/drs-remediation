@@ -31,6 +31,8 @@ public final class EnvUtils {
 
     static final String PARALLELISM = "PARALLELISM";
 
+    static final String VERIFY_ONLY = "VERIFY_ONLY";
+
     static final String INPUT_PATH = "INPUT_PATH";
     static final String INPUT_PATTERN = "INPUT_PATTERN";
     static final String INPUT_SKIP = "INPUT_SKIP";
@@ -43,6 +45,7 @@ public final class EnvUtils {
 
     private static final Map<String, String> DEFAULT_ENV = Map.of(
         PARALLELISM, "12",
+        VERIFY_ONLY, "false",
         INPUT_PATH, "./external/dump.txt",
         INPUT_PATTERN, "^\\d+ : (\\d+) .*:(\\d+)$",
         INPUT_SKIP, "2",
@@ -62,6 +65,15 @@ public final class EnvUtils {
      */
     public static int getParallelism() {
         return parseInt(get(PARALLELISM));
+    }
+
+    /**
+     * Retrieve environment verify onlt. (default false)
+     *
+     * @return whther to verify only
+     */
+    public static boolean getVerifyOnly() {
+        return parseBoolean(get(VERIFY_ONLY));
     }
 
     /**

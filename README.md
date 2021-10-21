@@ -7,6 +7,7 @@
 | LOG_LEVEL               | root log level                             | info                       |
 | REMEDIATION_LOG         | file path for remediation log              | ./external/remediation.log |
 | PARALLELISM             | number of concurrent tasks                 | 12                         |
+| VERIFY_ONLY             | whether to only verify remediation         | false                      |
 | AWS_BUCKET_NAME         | AWS S3 bucket name                         | harvard-drs-delivery       |
 | AWS_MAX_KEYS            | AWS S3 list max keys                       | 1000                       |
 | AWS_MAX_PART_SIZE       | AWS S3 max part size                       | 52428800 (50 MiB)          |
