@@ -128,7 +128,7 @@ public class AmazonS3RemediationTask implements ProcessTask {
         // ensure nss is a number
         Long.parseLong(nss);
 
-        String reversedNss = leftPad(reverse(nss), 8, "0");
+        String reversedNss = reverse(leftPad(nss, 8, "0"));
 
         return format(
             "%s/%s/%s",
