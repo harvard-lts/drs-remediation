@@ -49,6 +49,7 @@ The result flag:
  0 success
  1 skipped due to multipart/threshold
  2 skipped due to unsupported key
+ 3 skipped due to verified renamed
 ```
 
 ## Run

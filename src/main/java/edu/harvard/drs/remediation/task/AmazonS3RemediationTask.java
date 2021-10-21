@@ -16,15 +16,18 @@
 
 package edu.harvard.drs.remediation.task;
 
+import static edu.harvard.drs.remediation.utility.EnvUtils.getVerifyOnly;
 import static edu.harvard.drs.remediation.utility.TimeUtils.elapsed;
 import static java.lang.String.format;
 import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.StringUtils.isNumeric;
 import static org.apache.commons.lang3.StringUtils.leftPad;
 import static org.apache.commons.lang3.StringUtils.reverse;
 
 import edu.harvard.drs.remediation.store.ObjectStore;
 import java.util.List;
 import java.util.UUID;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.s3.model.S3Object;
@@ -45,6 +48,8 @@ public class AmazonS3RemediationTask implements ProcessTask {
 
     private final String id;
 
+    private final boolean verifyOnly;
+
     /**
      * Amazon S3 remediation task constructor.
      *
@@ -58,6 +63,7 @@ public class AmazonS3RemediationTask implements ProcessTask {
         this.s3 = s3;
         this.objects = objects;
         this.id = UUID.randomUUID().toString();
+        this.verifyOnly = getVerifyOnly();
     }
 
     @Override
@@ -96,7 +102,9 @@ public class AmazonS3RemediationTask implements ProcessTask {
             result = 2;
         }
 
-        if (nonNull(destinationKey)) {
+        if (destinationKey.equals(object.key())) {
+            result = 3;
+        } else if (nonNull(destinationKey)) {
             result = this.s3.rename(object, destinationKey);
         }
 
@@ -120,6 +128,12 @@ public class AmazonS3RemediationTask implements ProcessTask {
      * @throws NumberFormatException not a number
      */
     String mapKey(String key) throws NumberFormatException {
+        boolean renameVerified = verifyRename(key);
+
+        if (renameVerified || verifyOnly) {
+            return key;
+        }
+
         // parse root "folder" from object key
         String nss = key.contains(PATH_SEPARATOR)
             ? key.substring(0, key.indexOf(PATH_SEPARATOR))
@@ -136,6 +150,41 @@ public class AmazonS3RemediationTask implements ProcessTask {
             reversedNss.substring(4, 8),
             key
         );
+    }
+
+    /**
+     * Perform multiple checks to determine if key is expected rename format.
+     *
+     * @param key s3 object key
+     * @return whether the key has already been renamed according to spec
+     */
+    boolean verifyRename(String key) {
+        boolean verified = true;
+        String[] path = key.split("/");
+        if (path.length < 3) {
+            // less than expected number of folders
+            verified = false;
+        }
+        if (verified && !isNumeric(path[0]) && path[0].length() != 4) {
+            // 1rd folder is not 4 digit number
+            verified = false;
+        }
+        if (verified && !isNumeric(path[1]) && path[1].length() != 4) {
+            // 2nd folder is not 4 digit number
+            verified = false;
+        }
+        if (verified && !isNumeric(path[2])) {
+            // 3rd folder is not number
+            verified = false;
+        }
+
+        if (verified) {
+            String reversedNss = reverse(leftPad(path[2], 8, "0"));
+            verified = reversedNss.substring(0, 4).equals(path[0])
+                && reversedNss.substring(4, 8).equals(path[0]);
+        }
+
+        return verified;
     }
 
 }
