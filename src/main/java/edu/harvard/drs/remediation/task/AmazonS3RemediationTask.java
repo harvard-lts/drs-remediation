@@ -165,7 +165,7 @@ public class AmazonS3RemediationTask implements ProcessTask {
             verified = false;
         }
         if (verified && !isNumeric(path[0]) && path[0].length() != 4) {
-            // 1rd folder is not 4 digit number
+            // 1st folder is not 4 digit number
             verified = false;
         }
         if (verified && !isNumeric(path[1]) && path[1].length() != 4) {
