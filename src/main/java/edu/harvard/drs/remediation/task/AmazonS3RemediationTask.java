@@ -27,7 +27,6 @@ import static org.apache.commons.lang3.StringUtils.reverse;
 import edu.harvard.drs.remediation.store.ObjectStore;
 import java.util.List;
 import java.util.UUID;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.s3.model.S3Object;
@@ -177,11 +176,10 @@ public class AmazonS3RemediationTask implements ProcessTask {
             // 3rd folder is not number
             verified = false;
         }
-
         if (verified) {
             String reversedNss = reverse(leftPad(path[2], 8, "0"));
             verified = reversedNss.substring(0, 4).equals(path[0])
-                && reversedNss.substring(4, 8).equals(path[0]);
+                && reversedNss.substring(4, 8).equals(path[1]);
         }
 
         return verified;
