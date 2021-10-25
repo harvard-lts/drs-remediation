@@ -16,6 +16,7 @@
 
 package edu.harvard.drs.remediation.task;
 
+import static java.lang.String.format;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 
 import java.util.Iterator;
@@ -80,8 +81,14 @@ public class IteratingTaskProcessor<T extends ProcessTask> {
      */
     public void submit(ProcessTask task) {
         log.info("submitting task {}: {}", this.count.incrementAndGet(), task.id());
-        CompletableFuture.supplyAsync(() -> task.execute(), executor)
-            .thenAccept(t -> complete(t));
+        CompletableFuture.supplyAsync(() -> {
+            try {
+                return task.execute();
+            } catch (Exception e) {
+                log.info(format("failed to execute task %s: %s", this.count.getAndDecrement(), task.id()), e);
+                return task;
+            }
+        }, executor).thenAccept(t -> complete(t));
     }
 
     private void complete(ProcessTask task) {
