@@ -101,10 +101,12 @@ public class AmazonS3RemediationTask implements ProcessTask {
             result = 2;
         }
 
-        if (destinationKey.equals(object.key())) {
-            result = 3;
-        } else if (nonNull(destinationKey)) {
-            result = this.s3.rename(object, destinationKey);
+        if (nonNull(destinationKey)) {
+            if (destinationKey.equals(object.key())) {
+                result = 3;
+            } else {
+                result = this.s3.rename(object, destinationKey);
+            }
         }
 
         remediation.info("{},{},{},{},{},{}",
