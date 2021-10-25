@@ -1,9 +1,13 @@
-version: '3.3'
+# Build image
+# `docker-compose -f docker-compose.yml build`
+# Push to registry
+# `docker-compose -f docker-compose.yml push`
+
+version: '3.8'
 
 services:
-  service:
+  app:
+    image: registry.lts.harvard.edu/lts/drs-rename:63a8aef
     build:
       context: .
-    env_file: .env
-    volumes:
-      - ./external:/external
+      dockerfile: Dockerfile
