@@ -95,17 +95,17 @@ public class AmazonS3RemediationTask implements ProcessTask {
 
         String destinationKey = null;
 
-        try {
-            destinationKey = mapKey(object.key());
-        } catch (NumberFormatException e) {
-            result = 2;
-        }
+        if (verifyRename(object.key())) {
+            result = 3;
+        } else if (verifyOnly) {
+            result = 4;
+        } else {
+            try {
+                destinationKey = mapKey(object.key());
 
-        if (nonNull(destinationKey)) {
-            if (destinationKey.equals(object.key())) {
-                result = 3;
-            } else {
                 result = this.s3.rename(object, destinationKey);
+            } catch (NumberFormatException e) {
+                result = 2;
             }
         }
 
@@ -129,12 +129,6 @@ public class AmazonS3RemediationTask implements ProcessTask {
      * @throws NumberFormatException not a number
      */
     String mapKey(String key) throws NumberFormatException {
-        boolean renameVerified = verifyRename(key);
-
-        if (renameVerified || verifyOnly) {
-            return key;
-        }
-
         // parse root "folder" from object key
         String nss = key.contains(PATH_SEPARATOR)
             ? key.substring(0, key.indexOf(PATH_SEPARATOR))
