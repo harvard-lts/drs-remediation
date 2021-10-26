@@ -19,7 +19,6 @@ package edu.harvard.drs.remediation.task;
 import static edu.harvard.drs.remediation.utility.EnvUtils.getVerifyOnly;
 import static edu.harvard.drs.remediation.utility.TimeUtils.elapsed;
 import static java.lang.String.format;
-import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isNumeric;
 import static org.apache.commons.lang3.StringUtils.leftPad;
 import static org.apache.commons.lang3.StringUtils.reverse;
