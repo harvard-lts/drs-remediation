@@ -41,6 +41,11 @@ public class EnvUtilsTest {
     }
 
     @Test
+    public void testGetVerifyOnly() {
+        assertEquals(false, EnvUtils.getVerifyOnly());
+    }
+
+    @Test
     public void testGetInputPath() {
         assertEquals("./external/dump.txt", EnvUtils.getInputPath());
     }

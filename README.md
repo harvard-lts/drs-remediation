@@ -7,6 +7,7 @@
 | LOG_LEVEL               | root log level                             | info                       |
 | REMEDIATION_LOG         | file path for remediation log              | ./external/remediation.log |
 | PARALLELISM             | number of concurrent tasks                 | 12                         |
+| VERIFY_ONLY             | whether to only verify remediation         | false                      |
 | AWS_BUCKET_NAME         | AWS S3 bucket name                         | harvard-drs-delivery       |
 | AWS_MAX_KEYS            | AWS S3 list max keys                       | 1000                       |
 | AWS_MAX_PART_SIZE       | AWS S3 max part size                       | 52428800 (50 MiB)          |
@@ -32,7 +33,13 @@ The remediation process:
 
 Each partition will be provided to a process task along with a object store to be queued in a process queue until all objects have been processed.
 
-Each object remediated will result in a row in the remediation log. Each row will consist of source object key, destination object key, object eTag, object size in bytes, result of rename, and ellapsed time in milliseconds. The remediation log will be appended on subsequent executions.
+Each object remediated will result in a row in the remediation log. ***The remediation log will be appended on subsequent executions.***
+
+Remediation log:
+
+```csv
+source object key, destination object key, object eTag, object size in bytes, result of rename, ellapsed time in milliseconds
+```
 
 The result flag:
 
@@ -42,6 +49,8 @@ The result flag:
  0 success
  1 skipped due to multipart/threshold
  2 skipped due to unsupported key
+ 3 skipped due to verified rename
+ 4 skipped due to verify only and not renamed
 ```
 
 ## Run

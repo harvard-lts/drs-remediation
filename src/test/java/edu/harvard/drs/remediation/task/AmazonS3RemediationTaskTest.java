@@ -17,7 +17,9 @@
 package edu.harvard.drs.remediation.task;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -75,11 +77,32 @@ public class AmazonS3RemediationTaskTest extends AbstractTaskTest {
 
     @Test
     public void testMapKey() {
-        String urn = this.remediationTasks.get(0)
+        String mappedKey = this.remediationTasks.get(0)
             .mapKey(keys[0][0]);
 
-        assertNotNull(urn);
-        assertEquals(destinationKeys[0][0], urn);
+        assertNotNull(mappedKey);
+        assertEquals(destinationKeys[0][0], mappedKey);
+
+        assertTrue(this.remediationTasks.get(0)
+            .verifyRename(mappedKey));
+    }
+
+    @Test
+    public void testVerifyRename() {
+        String mappedKey = "";
+
+        assertFalse(this.remediationTasks.get(0)
+            .verifyRename(mappedKey));
+
+        mappedKey = "12887296/v1/content/data/400171120.png";
+
+        assertFalse(this.remediationTasks.get(0)
+            .verifyRename(mappedKey));
+
+        mappedKey = "6927/8821/12887296/v1/content/data/400171120.png";
+
+        assertTrue(this.remediationTasks.get(0)
+            .verifyRename(mappedKey));
     }
 
 }
