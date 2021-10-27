@@ -32,6 +32,7 @@ import edu.harvard.drs.remediation.store.ObjectStore;
 import edu.harvard.drs.remediation.task.AmazonS3RemediationTask;
 import edu.harvard.drs.remediation.task.Callback;
 import edu.harvard.drs.remediation.task.IteratingTaskProcessor;
+import java.time.Instant;
 import java.util.Iterator;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -77,6 +78,8 @@ public final class Remediate {
 
         log.info("remediation of S3 bucket {} started", getAwsBucketName());
 
+        final Instant start = Instant.now();
+
         Iterator<List<S3Object>> iterator = s3.iterator();
 
         new IteratingTaskProcessor<AmazonS3RemediationTask>(getParallelism(), new Iterator<AmazonS3RemediationTask>() {
@@ -99,7 +102,7 @@ public final class Remediate {
 
                 List<S3Object> objects = iterator.next();
 
-                return new AmazonS3RemediationTask(store, objects);
+                return new AmazonS3RemediationTask(start, store, objects);
             }
 
         }, new Callback() {
