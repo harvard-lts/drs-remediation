@@ -17,6 +17,7 @@
 package edu.harvard.drs.remediation;
 
 import static edu.harvard.drs.remediation.utility.EnvUtils.getAwsBucketName;
+import static edu.harvard.drs.remediation.utility.EnvUtils.getAwsEndpointOverride;
 import static edu.harvard.drs.remediation.utility.EnvUtils.getAwsMaxKeys;
 import static edu.harvard.drs.remediation.utility.EnvUtils.getAwsMaxPartSize;
 import static edu.harvard.drs.remediation.utility.EnvUtils.getAwsMultipartThreshold;
@@ -26,6 +27,7 @@ import static edu.harvard.drs.remediation.utility.RuntimeUtils.availableProcesso
 import static edu.harvard.drs.remediation.utility.RuntimeUtils.totalMemory;
 import static edu.harvard.drs.remediation.utility.TimeUtils.elapsed;
 import static java.lang.System.nanoTime;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 import edu.harvard.drs.remediation.store.AmazonS3Bucket;
 import edu.harvard.drs.remediation.store.ObjectStore;
@@ -63,7 +65,11 @@ public final class Remediate {
 
         log.info("{} parallelism", getParallelism());
 
-        final String endpointOverride = args.length > 0 ? args[0] : null;
+        final String endpointOverride = args.length > 0 && isNotEmpty(args[0])
+            ? args[0]
+            : isNotEmpty(getAwsEndpointOverride())
+                ? getAwsEndpointOverride()
+                : null;
 
         final AmazonS3Bucket s3 = new AmazonS3Bucket(
             getAwsBucketName(),

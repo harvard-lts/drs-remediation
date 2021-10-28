@@ -21,6 +21,7 @@ import static java.lang.Integer.parseInt;
 import static java.lang.Long.parseLong;
 import static java.util.Optional.ofNullable;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -38,23 +39,28 @@ public final class EnvUtils {
     static final String INPUT_SKIP = "INPUT_SKIP";
 
     static final String AWS_BUCKET_NAME = "AWS_BUCKET_NAME";
+    static final String AWS_ENDPOINT_OVERRIDE = "AWS_ENDPOINT_OVERRIDE";
+
     static final String AWS_MAX_KEYS = "AWS_MAX_KEYS";
     static final String AWS_MAX_PART_SIZE = "AWS_MAX_PART_SIZE";
     static final String AWS_MULTIPART_THRESHOLD = "AWS_MULTIPART_THRESHOLD";
     static final String AWS_SKIP_MULTIPART = "AWS_SKIP_MULTIPART";
 
-    private static final Map<String, String> DEFAULT_ENV = Map.of(
-        PARALLELISM, "12",
-        VERIFY_ONLY, "false",
-        INPUT_PATH, "./external/dump.txt",
-        INPUT_PATTERN, "^\\d+ : (\\d+) .*:(\\d+)$",
-        INPUT_SKIP, "2",
-        AWS_BUCKET_NAME, "harvard-drs-delivery",
-        AWS_MAX_KEYS, "1000",
-        AWS_MAX_PART_SIZE, "52428800",
-        AWS_MULTIPART_THRESHOLD, "104857600",
-        AWS_SKIP_MULTIPART, "false"
-    );
+    private static final Map<String, String> DEFAULT_ENV = new HashMap<>() {
+        {
+            put(PARALLELISM, "12");
+            put(VERIFY_ONLY, "false");
+            put(INPUT_PATH, "./external/dump.txt");
+            put(INPUT_PATTERN, "^\\d+ : (\\d+) .*:(\\d+)$");
+            put(INPUT_SKIP, "2");
+            put(AWS_BUCKET_NAME, "harvard-drs-delivery");
+            put(AWS_ENDPOINT_OVERRIDE, "");
+            put(AWS_MAX_KEYS, "1000");
+            put(AWS_MAX_PART_SIZE, "52428800");
+            put(AWS_MULTIPART_THRESHOLD, "104857600");
+            put(AWS_SKIP_MULTIPART, "false");
+        }
+    };
 
     private EnvUtils() { }
 
@@ -110,6 +116,15 @@ public final class EnvUtils {
      */
     public static String getAwsBucketName() {
         return get(AWS_BUCKET_NAME);
+    }
+
+    /**
+     * Retrieve environment AWS endpoint override. (default ``)
+     *
+     * @return AWS endpoint override
+     */
+    public static String getAwsEndpointOverride() {
+        return get(AWS_ENDPOINT_OVERRIDE);
     }
 
     /**
