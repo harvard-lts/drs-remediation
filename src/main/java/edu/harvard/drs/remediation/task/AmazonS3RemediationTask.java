@@ -24,6 +24,7 @@ import static org.apache.commons.lang3.StringUtils.leftPad;
 import static org.apache.commons.lang3.StringUtils.reverse;
 
 import edu.harvard.drs.remediation.store.ObjectStore;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;
@@ -40,6 +41,8 @@ public class AmazonS3RemediationTask implements ProcessTask {
 
     private static final String PATH_SEPARATOR = "/";
 
+    private final Instant start;
+
     private final ObjectStore s3;
 
     private final List<S3Object> objects;
@@ -51,13 +54,16 @@ public class AmazonS3RemediationTask implements ProcessTask {
     /**
      * Amazon S3 remediation task constructor.
      *
+     * @param start   start instant
      * @param s3      object store to remediate
      * @param objects list of S3 objects to remediate
      */
     public AmazonS3RemediationTask(
+        Instant start,
         ObjectStore s3,
         List<S3Object> objects
     ) {
+        this.start = start;
         this.s3 = s3;
         this.objects = objects;
         this.id = UUID.randomUUID().toString();
@@ -88,6 +94,11 @@ public class AmazonS3RemediationTask implements ProcessTask {
      * @return result of rename
      */
     int remediate(S3Object object) {
+        // skip any object modified after beginning of the remediation process
+        if (object.lastModified().isAfter(start)) {
+            return 5;
+        }
+
         int result = 0;
 
         long startTime = System.nanoTime();

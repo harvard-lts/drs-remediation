@@ -23,6 +23,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
@@ -64,6 +66,7 @@ public class AmazonS3RemediationTaskTest extends AbstractTaskTest {
     public void testRemediateSkipped() {
         S3Object object = S3Object.builder()
             .key(keys[0][0])
+            .lastModified(now)
             .build();
 
         int actual = this.remediationTasks.get(0)
@@ -73,6 +76,19 @@ public class AmazonS3RemediationTaskTest extends AbstractTaskTest {
             .rename(object, destinationKeys[0][0]);
 
         assertEquals(1, actual);
+    }
+
+    @Test
+    public void testRemediateSkippedModifiedAfter() {
+        S3Object object = S3Object.builder()
+            .key(keys[0][0])
+            .lastModified(Instant.now().plus(10, ChronoUnit.SECONDS))
+            .build();
+
+        int actual = this.remediationTasks.get(0)
+            .remediate(object);
+
+        assertEquals(5, actual);
     }
 
     @Test

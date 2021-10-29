@@ -17,6 +17,7 @@
 package edu.harvard.drs.remediation;
 
 import static edu.harvard.drs.remediation.utility.EnvUtils.getAwsBucketName;
+import static edu.harvard.drs.remediation.utility.EnvUtils.getAwsEndpointOverride;
 import static edu.harvard.drs.remediation.utility.EnvUtils.getAwsMaxKeys;
 import static edu.harvard.drs.remediation.utility.EnvUtils.getAwsMaxPartSize;
 import static edu.harvard.drs.remediation.utility.EnvUtils.getAwsMultipartThreshold;
@@ -26,12 +27,14 @@ import static edu.harvard.drs.remediation.utility.RuntimeUtils.availableProcesso
 import static edu.harvard.drs.remediation.utility.RuntimeUtils.totalMemory;
 import static edu.harvard.drs.remediation.utility.TimeUtils.elapsed;
 import static java.lang.System.nanoTime;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 import edu.harvard.drs.remediation.store.AmazonS3Bucket;
 import edu.harvard.drs.remediation.store.ObjectStore;
 import edu.harvard.drs.remediation.task.AmazonS3RemediationTask;
 import edu.harvard.drs.remediation.task.Callback;
 import edu.harvard.drs.remediation.task.IteratingTaskProcessor;
+import java.time.Instant;
 import java.util.Iterator;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -62,7 +65,11 @@ public final class Remediate {
 
         log.info("{} parallelism", getParallelism());
 
-        final String endpointOverride = args.length > 0 ? args[0] : null;
+        final String endpointOverride = args.length > 0 && isNotEmpty(args[0])
+            ? args[0]
+            : isNotEmpty(getAwsEndpointOverride())
+                ? getAwsEndpointOverride()
+                : null;
 
         final AmazonS3Bucket s3 = new AmazonS3Bucket(
             getAwsBucketName(),
@@ -76,6 +83,8 @@ public final class Remediate {
         final long startTime = nanoTime();
 
         log.info("remediation of S3 bucket {} started", getAwsBucketName());
+
+        final Instant start = Instant.now();
 
         Iterator<List<S3Object>> iterator = s3.iterator();
 
@@ -99,7 +108,7 @@ public final class Remediate {
 
                 List<S3Object> objects = iterator.next();
 
-                return new AmazonS3RemediationTask(store, objects);
+                return new AmazonS3RemediationTask(start, store, objects);
             }
 
         }, new Callback() {

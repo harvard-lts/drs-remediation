@@ -66,6 +66,11 @@ public class EnvUtilsTest {
     }
 
     @Test
+    public void testGetAwsEndpointOverride() {
+        assertEquals("", EnvUtils.getAwsEndpointOverride());
+    }
+
+    @Test
     public void testGetAwsMaxKeys() {
         assertEquals(1000, EnvUtils.getAwsMaxKeys());
     }

@@ -20,6 +20,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 
 import edu.harvard.drs.remediation.store.ObjectStore;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,6 +40,8 @@ public abstract class AbstractTaskTest {
 
     @Mock
     ObjectStore store;
+
+    final Instant now = Instant.now();
 
     final List<ObjectStore> objectStores = new ArrayList<>();
 
@@ -104,13 +107,16 @@ public abstract class AbstractTaskTest {
                     .rename(partition.get(k), destinationKeys[i][k]);
             }
 
-            this.remediationTasks.add(new AmazonS3RemediationTask(store, partition));
+            final Instant start = Instant.now();
+
+            this.remediationTasks.add(new AmazonS3RemediationTask(start, store, partition));
         }
     }
 
     private S3Object object(String key) {
         return S3Object.builder()
             .key(key)
+            .lastModified(now)
             .build();
     }
 
